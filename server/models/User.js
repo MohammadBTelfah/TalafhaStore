@@ -13,7 +13,6 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    match: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/
   },
   fullName: {
     type: String,
@@ -22,7 +21,6 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true,
-    match: /^\d{10}$/
   },
   role: {
     type: String,

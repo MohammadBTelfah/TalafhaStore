@@ -8,22 +8,33 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.register = async (req, res) => {
   try {
-    const { username, email, password, fullName, phone, address } = req.body;
+    const { username, email, password, fullName, phone } = req.body;
 
+    // تحقق إذا المستخدم موجود
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: 'User already exists' });
 
+    // تحقق من قوة الباسورد (قبل التشفير)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message: 'Password must include at least one uppercase, one lowercase, one number, and be at least 8 characters long.'
+      });
+    }
+
+    // تشفير الباسورد
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // إنشاء المستخدم الجديد
     const user = new User({
       username,
       email,
       password: hashedPassword,
       fullName,
       phone,
-      address,
-      profileImage: req.file ? `uploads/${req.file.filename}` : ''
+      profileImage: req.file ? req.file.filename : ''
+      // address غير مستخدم بناءً على كلامك
     });
 
     await user.save();
@@ -34,16 +45,15 @@ exports.register = async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        fullName: user.fullName,
-        address: user.address,
-        phone: user.phone,
-        profileImage: user.profileImage
+        fullName: user.fullName
       }
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Error registering user', error: err.message });
   }
 };
+
 
 exports.login = async (req, res) => {
   try {

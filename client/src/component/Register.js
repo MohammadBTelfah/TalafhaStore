@@ -10,6 +10,8 @@ export default function RegistrationForm() {
   const [imagePreview, setImagePreview] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -20,8 +22,38 @@ export default function RegistrationForm() {
     confirmPassword: ''
   });
 
+  const [errors, setErrors] = useState({});
+
+  const validatePassword = (password) => {
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    return regex.test(password);
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    if (e.target.name === 'password') {
+      if (!validatePassword(e.target.value)) {
+        setErrors((prev) => ({
+          ...prev,
+          password:
+            'Password must include at least one uppercase, one lowercase, one number, and be at least 8 characters long.',
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, password: '' }));
+      }
+    }
+
+    if (e.target.name === 'confirmPassword') {
+      if (e.target.value !== formData.password) {
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword: 'Passwords do not match.',
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, confirmPassword: '' }));
+      }
+    }
   };
 
   const handleImageClick = () => {
@@ -42,10 +74,15 @@ export default function RegistrationForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+    if (!validatePassword(formData.password)) {
       return;
     }
+
+    if (formData.password !== formData.confirmPassword) {
+      return;
+    }
+
+    setIsSubmitting(true);
 
     const data = new FormData();
     data.append('fullName', formData.fullName);
@@ -53,25 +90,36 @@ export default function RegistrationForm() {
     data.append('email', formData.email);
     data.append('phone', formData.phone);
     data.append('password', formData.password);
-    data.append('address', 'N/A'); // ممكن تعدل العنوان
+    data.append('address', 'N/A');
 
     if (fileInputRef.current.files[0]) {
       data.append('profileImage', fileInputRef.current.files[0]);
     }
 
     try {
-      const res = await axios.post('http://127.0.0.1:5002/api/users/register', data);
-      alert('Registered successfully');
-      navigate('/login');
+      await axios.post('http://127.0.0.1:5002/api/users/register', data);
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || 'Registration failed');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="register-page">
-      <div className="container">
+      {success && (
+        <div className="success-overlay">
+          <div className="check-icon">
+            <span>✓</span>
+          </div>
+        </div>
+      )}
+
+      <div className={`container ${success ? 'blur-background' : ''}`}>
         <div className="title">Registration</div>
 
         <div className="image-upload" onClick={handleImageClick}>
@@ -92,51 +140,21 @@ export default function RegistrationForm() {
         <div className="content">
           <form onSubmit={handleSubmit}>
             <div className="user-details">
-              <div className="input-box">
-                <span className="details">Full Name</span>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="Enter your name"
-                  required
-                />
-              </div>
-              <div className="input-box">
-                <span className="details">Username</span>
-                <input
-                  type="text"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  placeholder="Enter your username"
-                  required
-                />
-              </div>
-              <div className="input-box">
-                <span className="details">Email</span>
-                <input
-                  type="text"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
-              <div className="input-box">
-                <span className="details">Phone Number</span>
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="Enter your number"
-                  required
-                />
-              </div>
+              {['fullName', 'username', 'email', 'phone'].map((field) => (
+                <div className="input-box" key={field}>
+                  <span className="details">{field.replace(/([A-Z])/g, ' $1')}</span>
+                  <input
+                    type="text"
+                    name={field}
+                    value={formData[field]}
+                    onChange={handleChange}
+                    placeholder={`Enter your ${field}`}
+                    required
+                  />
+                </div>
+              ))}
 
+              {/* Password */}
               <div className="input-box password-box">
                 <span className="details">Password</span>
                 <div className="password-input-wrapper">
@@ -145,15 +163,26 @@ export default function RegistrationForm() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="Enter your password"
+                    className={
+                      errors.password
+                        ? 'error'
+                        : formData.password && validatePassword(formData.password)
+                        ? 'success'
+                        : ''
+                    }
                     required
                   />
-                  <span onClick={() => setShowPassword(!showPassword)} className="eye-icon">
+                  <span
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="eye-icon"
+                  >
                     {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
                   </span>
                 </div>
+                {errors.password && <p className="error-text">{errors.password}</p>}
               </div>
 
+              {/* Confirm Password */}
               <div className="input-box password-box">
                 <span className="details">Confirm Password</span>
                 <div className="password-input-wrapper">
@@ -162,7 +191,14 @@ export default function RegistrationForm() {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    placeholder="Confirm your password"
+                    className={
+                      errors.confirmPassword
+                        ? 'error'
+                        : formData.confirmPassword &&
+                          formData.confirmPassword === formData.password
+                        ? 'success'
+                        : ''
+                    }
                     required
                   />
                   <span
@@ -172,20 +208,20 @@ export default function RegistrationForm() {
                     {showConfirmPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
                   </span>
                 </div>
+                {errors.confirmPassword && (
+                  <p className="error-text">{errors.confirmPassword}</p>
+                )}
               </div>
             </div>
 
             <div className="button">
-              <input type="submit" value="Register" />
+              <input type="submit" value={isSubmitting ? 'Registering...' : 'Register'} disabled={isSubmitting} />
             </div>
           </form>
 
           <div className="footer">
             Already have an account?{' '}
-            <span
-              style={{ color: '#9b59b6', cursor: 'pointer', fontWeight: '500' }}
-              onClick={() => navigate('/login')}
-            >
+            <span onClick={() => navigate('/login')} style={{ color: '#9b59b6', cursor: 'pointer', fontWeight: '500' }}>
               Sign in
             </span>
           </div>

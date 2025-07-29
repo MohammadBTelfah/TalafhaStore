@@ -16,14 +16,14 @@ const upload = multer({ storage });
 
 // ✅ Register new user
 router.post('/register', upload.single('profileImage'), userController.register);
+
 // ✅ Login
 router.post('/login', userController.login);
-
 // ✅ Get user profile
 router.get('/profile', auth, userController.getUserProfile);
 
 // ✅ Update user profile (including profile image)
-router.put('/update-profile', auth, upload.single('profileImage'), userController.updateProfile);
+router.put('/update-profile', auth, upload.single('profileImage'), userController.updateUserProfile);
 // ✅ Request password reset
 router.post('/reset-password/request', userController.requestPasswordReset);
 

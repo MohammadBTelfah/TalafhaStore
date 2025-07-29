@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
 
 * {
@@ -7,7 +8,6 @@
   font-family: 'Poppins', sans-serif;
 }
 
-/* ✅ الخلفية المتدرجة لصفحة التسجيل فقط */
 .register-page {
   height: 100vh;
   display: flex;
@@ -15,6 +15,7 @@
   align-items: center;
   background: linear-gradient(135deg, #71b7e6, #9b59b6);
   padding: 10px;
+  position: relative;
 }
 
 .container {
@@ -24,6 +25,7 @@
   padding: 25px 30px;
   border-radius: 5px;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+  z-index: 1;
 }
 
 .container .title {
@@ -78,45 +80,6 @@ form .input-box span.details {
   border-color: #9b59b6;
 }
 
-form .gender-details .gender-title {
-  font-size: 20px;
-  font-weight: 500;
-}
-
-form .category {
-  display: flex;
-  width: 80%;
-  margin: 14px 0;
-  justify-content: space-between;
-}
-
-form .category label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-form .category label .dot {
-  height: 18px;
-  width: 18px;
-  border-radius: 50%;
-  margin-right: 10px;
-  background: #d9d9d9;
-  border: 5px solid transparent;
-  transition: all 0.3s ease;
-}
-
-#dot-1:checked ~ .category label .one,
-#dot-2:checked ~ .category label .two,
-#dot-3:checked ~ .category label .three {
-  background: #9b59b6;
-  border-color: #d9d9d9;
-}
-
-form input[type="radio"] {
-  display: none;
-}
-
 form .button {
   height: 45px;
   margin: 35px 0;
@@ -140,17 +103,12 @@ form .button input:hover {
   background: linear-gradient(-135deg, #71b7e6, #9b59b6);
 }
 
-/* 📱 Responsive media query */
 @media (max-width: 584px) {
   .container {
     max-width: 100%;
   }
 
   form .user-details .input-box {
-    width: 100%;
-  }
-
-  form .category {
     width: 100%;
   }
 
@@ -164,39 +122,6 @@ form .button input:hover {
   }
 }
 
-@media (max-width: 459px) {
-  .container .content .category {
-    flex-direction: column;
-  }
-}
-/* ✅ إضافة تأثيرات تفاعلية */
-.user-details .input-box input:hover {
-  border-color: #9b59b6;
-}
-.user-details .input-box input:focus {
-  box-shadow: 0 0 5px rgba(155, 89, 182, 0.5);
-}
-.user-details .input-box input:valid {
-  border-color: #2ecc71;
-}
-.user-details .input-box input:invalid {
-  border-color: #e74c3c;
-}
-.user-details .input-box input:disabled {
-  background-color: #f0f0f0;
-  cursor: not-allowed;
-}
-.user-details .input-box input::placeholder {
-  color: #999;
-  font-style: italic;
-}
-.user-details .input-box input:focus::placeholder {
-  color: transparent;
-}
-.user-details .input-box input:focus + span.details {
-  color: #9b59b6;
-  font-weight: 600;
-}
 .image-upload {
   display: flex;
   justify-content: center;
@@ -217,13 +142,14 @@ form .button input:hover {
 .profile-image:hover {
   transform: scale(1.05);
 }
+
 .password-input-wrapper {
   position: relative;
 }
 
 .password-input-wrapper input {
   width: 100%;
-  padding-right: 40px; /* مساحة للأيقونة */
+  padding-right: 40px;
 }
 
 .eye-icon {
@@ -234,4 +160,81 @@ form .button input:hover {
   cursor: pointer;
   font-size: 20px;
   color: #9b59b6;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(5px);
+  background-color: rgba(255, 255, 255, 0.2);
+  z-index: -1;
+}
+
+.check-container {
+  background: white;
+  padding: 30px;
+  border-radius: 50%;
+  box-shadow: 0 0 30px rgba(0, 128, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.blur-background {
+  filter: blur(5px);
+  pointer-events: none;
+  user-select: none;
+}
+
+
+.success-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #00cc44; /* لون أخضر ساطع */
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  box-shadow: 0 0 40px rgba(0, 128, 0, 0.5);
+}
+
+.success-overlay .check-icon {
+  color: white;
+  font-size: 60px;
+  font-weight: bold;
+}
+
+input.invalid {
+  border: 2px solid #e74c3c;
+}
+
+input.valid {
+  border: 2px solid #2ecc71;
+}
+
+.error-text {
+  color: #e74c3c;
+  font-size: 13px;
+  margin-top: 4px;
+}
+input.error {
+  border: 2px solid #e74c3c;
 }
