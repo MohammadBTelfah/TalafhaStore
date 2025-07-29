@@ -1,19 +1,56 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import '../styles/RegStyle.css';
 import { useNavigate } from 'react-router-dom';
 
 export default function RegistrationForm() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current.click(); // فتح اختيار الصورة عند الضغط على الصورة
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="register-page">
       <div className="container">
-        {/* Title section */}
+        {/* Title */}
         <div className="title">Registration</div>
+
+        {/* ✅ صورة الرفع */}
+        <div className="image-upload" onClick={handleImageClick}>
+          <img
+            src={
+              imagePreview ||
+              'https://cdn-icons-png.flaticon.com/512/847/847969.png' // صورة افتراضية
+            }
+            alt="Profile Preview"
+            className="profile-image"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            style={{ display: 'none' }}
+          />
+        </div>
+
         <div className="content">
-          {/* Registration form */}
           <form action="#">
             <div className="user-details">
+              {/* نفس الحقول القديمة */}
               <div className="input-box">
                 <span className="details">Full Name</span>
                 <input type="text" placeholder="Enter your name" required />
@@ -46,7 +83,7 @@ export default function RegistrationForm() {
             </div>
           </form>
 
-          {/* ✅ رابط تسجيل الدخول */}
+          {/* رابط تسجيل الدخول */}
           <div className="footer">
             Already have an account?{' '}
             <span

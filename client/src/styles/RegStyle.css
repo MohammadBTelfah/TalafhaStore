@@ -197,3 +197,23 @@ form .button input:hover {
   color: #9b59b6;
   font-weight: 600;
 }
+.image-upload {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  cursor: pointer;
+}
+
+.profile-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #9b59b6;
+  transition: transform 0.2s;
+}
+
+.profile-image:hover {
+  transform: scale(1.05);
+}
