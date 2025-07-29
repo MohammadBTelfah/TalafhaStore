@@ -217,3 +217,21 @@ form .button input:hover {
 .profile-image:hover {
   transform: scale(1.05);
 }
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding-right: 40px; /* مساحة للأيقونة */
+}
+
+.eye-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 20px;
+  color: #9b59b6;
+}

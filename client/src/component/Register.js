@@ -1,14 +1,18 @@
 import React, { useRef, useState } from 'react';
 import '../styles/RegStyle.css';
 import { useNavigate } from 'react-router-dom';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'; // أيقونات العين
 
 export default function RegistrationForm() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const handleImageClick = () => {
-    fileInputRef.current.click(); // فتح اختيار الصورة عند الضغط على الصورة
+    fileInputRef.current.click();
   };
 
   const handleImageChange = (e) => {
@@ -25,15 +29,13 @@ export default function RegistrationForm() {
   return (
     <div className="register-page">
       <div className="container">
-        {/* Title */}
         <div className="title">Registration</div>
 
-        {/* ✅ صورة الرفع */}
         <div className="image-upload" onClick={handleImageClick}>
           <img
             src={
               imagePreview ||
-              'https://cdn-icons-png.flaticon.com/512/847/847969.png' // صورة افتراضية
+              'https://cdn-icons-png.flaticon.com/512/847/847969.png'
             }
             alt="Profile Preview"
             className="profile-image"
@@ -50,7 +52,6 @@ export default function RegistrationForm() {
         <div className="content">
           <form action="#">
             <div className="user-details">
-              {/* نفس الحقول القديمة */}
               <div className="input-box">
                 <span className="details">Full Name</span>
                 <input type="text" placeholder="Enter your name" required />
@@ -67,23 +68,46 @@ export default function RegistrationForm() {
                 <span className="details">Phone Number</span>
                 <input type="text" placeholder="Enter your number" required />
               </div>
-              <div className="input-box">
+
+              {/* Password */}
+              <div className="input-box password-box">
                 <span className="details">Password</span>
-                <input type="password" placeholder="Enter your password" required />
+                <div className="password-input-wrapper">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <span onClick={() => setShowPassword(!showPassword)} className="eye-icon">
+                    {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+                  </span>
+                </div>
               </div>
-              <div className="input-box">
+
+              {/* Confirm Password */}
+              <div className="input-box password-box">
                 <span className="details">Confirm Password</span>
-                <input type="password" placeholder="Confirm your password" required />
+                <div className="password-input-wrapper">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Confirm your password"
+                    required
+                  />
+                  <span
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="eye-icon"
+                  >
+                    {showConfirmPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Submit button */}
             <div className="button">
               <input type="submit" value="Register" />
             </div>
           </form>
 
-          {/* رابط تسجيل الدخول */}
           <div className="footer">
             Already have an account?{' '}
             <span
