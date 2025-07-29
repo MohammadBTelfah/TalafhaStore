@@ -3,11 +3,17 @@ const router = express.Router();
 const productController = require('../Controllers//productController');
 const auth = require('../middleware/authMiddleware');
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/' }); // إعداد multer لحفظ الملفات في مجلد uploads
-
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+const upload = multer({ storage });
 // ✅ Create product
 router.post('/create', auth, upload.single('prodImage'), productController.createProduct);
-
 // ✅ Get all products
 router.get('/getAll', productController.getAllProducts);
 
@@ -16,7 +22,6 @@ router.get('/getbyid/:id', productController.getProductById);
 
 // ✅ Update product
 router.put('/update/:id', auth, upload.single('prodImage'), productController.updateProduct);
-
 // ✅ Delete product
 router.delete('/delete/:id', auth, productController.deleteProduct);
 

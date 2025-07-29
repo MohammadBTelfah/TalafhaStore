@@ -1,93 +1,89 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
 const sendEmail = require("../utils/sendEmail"); // تأكد من وجودها
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.register = async (req, res) => {
   try {
-    const { username, email, password, firstName, lastName, phone, address } = req.body;
+    const { username, email, password, fullName, phone, address } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: 'User already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ توليد رمز تفعيل عشوائي
-    const verifyToken = crypto.randomBytes(32).toString("hex");
-
-    // ✅ إنشاء المستخدم
     const user = new User({
       username,
       email,
       password: hashedPassword,
-      firstName,
-      lastName,
+      fullName,
       phone,
       address,
-      profileImage: req.file ? req.file.filename : "",
-      provider: "local",
-      verified: false,
-      verifyToken
+      profileImage: req.file ? `uploads/${req.file.filename}` : ''
     });
 
     await user.save();
 
-    // ⛔ ملاحظة: لم يتم إرسال الإيميل بعد (سنعمل عليه في الخطوة التالية)
-
     res.status(201).json({
-      message: "User registered. Please verify your email.",
-      verifyToken, // فقط مؤقتًا، للمساعدة في الاختبار (لا تستخدمه في الإنتاج)
+      message: 'User registered successfully.',
       user: {
         id: user._id,
+        username: user.username,
         email: user.email,
-        verified: user.verified
+        fullName: user.fullName,
+        address: user.address,
+        phone: user.phone,
+        profileImage: user.profileImage
       }
     });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
+    res.status(500).json({ message: 'Error registering user', error: err.message });
   }
 };
-
-
 
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // البحث عن المستخدم
     const user = await User.findOne({ email });
     if (!user)
       return res.status(400).json({ message: "User not found" });
 
-    // ✅ تحقق إذا الحساب مفعّل
-    if (!user.verified) {
-      return res.status(401).json({ message: "Please verify your email before logging in." });
-    }
-
+    // التحقق من كلمة المرور
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    // ✅ إصدار توكن
+    // إنشاء JWT token (بدون role لأنك ما بتستخدمه)
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id },
       process.env.JWT_SECRET || "your_jwt_secret",
       { expiresIn: "1h" }
     );
 
-    const userWithoutPassword = { ...user._doc };
-    delete userWithoutPassword.password;
-
+    // إرسال الرد
     res.status(200).json({
-      message: "User logged in",
+      message: "Login successful",
       token,
-      user: userWithoutPassword,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        profileImage: user.profileImage
+      }
     });
+
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
+    res.status(500).json({ message: "Login error", error: err.message });
   }
 };
+
 
 exports.getUserProfile = async (req, res) => {
   try {
@@ -291,6 +287,55 @@ exports.getAllUsers = async (req, res) => {
     res.status(200).json(users);
   } catch (err) {
     res.status(500).json({ message: "Error fetching users", error: err.message });
+  }
+};
+exports.googleLogin = async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // أنشئ مستخدم جديد
+      user = new User({
+        username: email.split('@')[0],
+        email,
+        fullName: name,
+        profileImage: picture,
+        password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10), // باسورد عشوائي
+        role: 'user'
+      });
+
+      await user.save();
+    }
+
+    // أنشئ JWT token
+    const jwtToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: '1h'
+    });
+
+    res.status(200).json({
+      token: jwtToken,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        profileImage: user.profileImage,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Google login error:', error.message);
+    res.status(401).json({ message: 'Invalid Google token', error: error.message });
   }
 };
 

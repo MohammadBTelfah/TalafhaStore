@@ -1,14 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../Controllers/userController');
-const passport = require('passport'); // Using passport directly
 const auth = require('../middleware/authMiddleware'); // Auth middleware for normal users
 const AdminAuth = require('../middleware/adminAuth'); // Middleware to ensure admin role
-const uploader = require('../middleware/upload'); // For handling profile image uploads
+const multer = require('multer'); // For handling file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+const upload = multer({ storage });
 
 // ✅ Register new user
-router.post('/register', uploader.single('profileImage'), userController.register);
-
+router.post('/register', upload.single('profileImage'), userController.register);
 // ✅ Login
 router.post('/login', userController.login);
 
@@ -16,8 +23,7 @@ router.post('/login', userController.login);
 router.get('/profile', auth, userController.getUserProfile);
 
 // ✅ Update user profile (including profile image)
-router.put('/profile', auth, uploader.single('profileImage'), userController.updateUserProfile);
-
+router.put('/update-profile', auth, upload.single('profileImage'), userController.updateProfile);
 // ✅ Request password reset
 router.post('/reset-password/request', userController.requestPasswordReset);
 
@@ -37,16 +43,6 @@ router.delete('/delete', auth, userController.deleteUser);
 router.get('/get-all', AdminAuth, userController.getAllUsers);
 
 // ✅ Login with Google
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-// ✅ Google OAuth callback
-router.get(
-  '/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login', session: false }),
-  (req, res) => {
-    // On successful authentication, respond with user data (or send a token if needed)
-    res.status(200).json({ message: 'Google login successful', user: req.user });
-  }
-);
+router.post('/google-login', userController.googleLogin);
 
 module.exports = router;
