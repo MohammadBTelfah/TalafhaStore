@@ -46,7 +46,7 @@ export default function LoginForm() {
         </div>
       )}
 
-      <div className={`login-container ${success ? 'blurred' : ''}`}>
+      <div className={`login-container ${success ? 'blur-background' : ''}`}>
         <div className="title">Login</div>
         <form onSubmit={handleSubmit}>
           <div className="input-box">
