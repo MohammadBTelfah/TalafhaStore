@@ -13,7 +13,8 @@ const productSchema = new mongoose.Schema({
   prodReviews: { type: Number, default: 0 },
   isFeatured: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
-  tags: [{ type: String }] // كلمات مفتاحية
+  tags: [{ type: String }],
+  
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

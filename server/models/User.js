@@ -31,7 +31,8 @@ const userSchema = new mongoose.Schema({
   profileImage: {
     type: String,
     default: '' // صورة افتراضية إن لزم
-  }
+  },
+  // 'createdAt' and 'updatedAt' will be automatically added by Mongoose's timestamps option
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
