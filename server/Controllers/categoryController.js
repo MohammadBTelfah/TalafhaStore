@@ -53,7 +53,6 @@ exports.updateCategory = async (req, res) => {
   }
 };
 // ✅ Delete category
-// ✅ Delete category
 exports.deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
