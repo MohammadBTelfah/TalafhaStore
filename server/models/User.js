@@ -20,12 +20,13 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true,
+    required: false,
+    default: '0000000000' // رقم وهمي، يجب تغييره لاحقاً من الواجهة
   },
   role: {
     type: String,
     enum: ['user', 'admin'],
-    default: 'user'
+    default: 'admin'
   },
   profileImage: {
     type: String,

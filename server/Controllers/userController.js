@@ -78,16 +78,18 @@ exports.login = async (req, res) => {
 
     // إرسال الرد
     res.status(200).json({
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        fullName: user.fullName,
-        profileImage: user.profileImage
-      }
-    });
+  message: "Login successful",
+  token,
+  role: user.role, // ✅ أضف هذا السطر
+  user: {
+    id: user._id,
+    username: user.username,
+    email: user.email,
+    fullName: user.fullName,
+    profileImage: user.profileImage
+  }
+});
+
 
   } catch (err) {
     res.status(500).json({ message: "Login error", error: err.message });
@@ -346,6 +348,39 @@ exports.googleLogin = async (req, res) => {
   } catch (error) {
     console.error('Google login error:', error.message);
     res.status(401).json({ message: 'Invalid Google token', error: error.message });
+  }
+};
+exports.googleCallback = async (req, res) => {
+  try {
+    const { id, displayName, emails } = req.user; // من passport
+    const email = emails[0].value;
+
+    // 🔍 تحقق إذا المستخدم موجود
+    let user = await User.findOne({ email });
+
+    // ❌ مش موجود؟ أنشئ حساب جديد
+    if (!user) {
+      user = new User({
+        username: displayName.toLowerCase().replace(/\s+/g, ''),
+        email,
+        firstName: displayName.split(' ')[0],
+        lastName: displayName.split(' ')[1] || '',
+        role: 'user', // أو admin إذا بدك
+        password: 'GoogleOAuthUser', // غير مستخدم فعليًا
+        isActive: true
+      });
+
+      await user.save();
+    }
+
+    // ✅ أنشئ التوكن
+    const token = generateToken(user._id);
+
+    // ✅ رجّع التوكن والبيانات
+    res.redirect(`http://localhost:3000/google-success?token=${token}&role=${user.role}&name=${user.firstName}`);
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(500).json({ message: 'Google login failed' });
   }
 };
 

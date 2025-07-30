@@ -1,48 +1,70 @@
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
+const generateToken = require('../utils/generateToken');
+const multer = require('multer');
+
 const userController = require('../Controllers/userController');
-const auth = require('../middleware/authMiddleware'); // Auth middleware for normal users
-const AdminAuth = require('../middleware/adminAuth'); // Middleware to ensure admin role
-const multer = require('multer'); // For handling file uploads
+const auth = require('../middleware/authMiddleware');
+const AdminAuth = require('../middleware/adminAuth');
+
+// إعدادات رفع الصور
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);
-    }
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
 });
 const upload = multer({ storage });
 
-// ✅ Register new user
+/* ========== ✅ Auth Routes ========== */
 router.post('/register', upload.single('profileImage'), userController.register);
-
-// ✅ Login
 router.post('/login', userController.login);
-// ✅ Get user profile
 router.get('/profile', auth, userController.getUserProfile);
-
-// ✅ Update user profile (including profile image)
 router.put('/update-profile', auth, upload.single('profileImage'), userController.updateUserProfile);
-// ✅ Request password reset
-router.post('/reset-password/request', userController.requestPasswordReset);
-
-// ✅ Reset password
-router.post('/reset-password', userController.resetPassword);
-
-// ✅ Email verification after registration
-router.get('/verify-email', userController.verifyEmail);
-
-// ✅ Change password (while logged in)
 router.post('/change-password', auth, userController.changePassword);
-
-// ✅ Delete user account
 router.delete('/delete', auth, userController.deleteUser);
 
-// ✅ Get all users (admin only)
+/* ========== ✅ Password Reset & Email ========== */
+router.post('/reset-password/request', userController.requestPasswordReset);
+router.post('/reset-password', userController.resetPassword);
+router.get('/verify-email', userController.verifyEmail);
+
+/* ========== ✅ Admin ========== */
 router.get('/get-all', AdminAuth, userController.getAllUsers);
 
-// ✅ Login with Google
-router.post('/google-login', userController.googleLogin);
+/* ========== ✅ Google Login ========== */
+// 1. بدء المصادقة مع Google
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// 2. بعد المصادقة، استلام البيانات والرد
+router.get(
+  '/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: '/login',
+    session: false,
+  }),
+  async (req, res) => {
+    try {
+      // ✅ تأكد إنه فيه req.user
+      if (!req.user) {
+        return res.redirect('http://localhost:3000/login?error=GoogleAuthFailed');
+      }
+
+      // ✅ إنشاء التوكن
+      const token = generateToken(req.user._id);
+      const role = req.user.role;
+
+      // ✅ إرسالهم بالرابط لفرونت إند
+      res.redirect(`http://localhost:3000/success?token=${token}&role=${role}`);
+    } catch (error) {
+      console.error('Google Auth error:', error);
+      res.redirect('http://localhost:3000/login?error=GoogleAuthError');
+    }
+  }
+);
+
 
 module.exports = router;

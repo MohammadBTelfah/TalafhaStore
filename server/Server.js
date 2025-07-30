@@ -1,40 +1,53 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const passport = require('passport');
+require('./middleware/googleAuth'); // ✅ استيراد إعدادات Google OAuth
+
 const userRoutes = require('./Routes/userRoutes');
 const productRoutes = require('./Routes/productRoutes');
 const categoryRoutes = require('./Routes/categoryRoutes');
-const CartRoutes = require('./Routes/CartRoutes'); // ✅ استيراد CartRoutes
-const OrderRoutes = require('./Routes/orderRoutes'); // ✅ استيراد OrderRoutes  
+const CartRoutes = require('./Routes/CartRoutes');
+const OrderRoutes = require('./Routes/orderRoutes');
 
 const path = require('path');
-const cors = require('cors'); // ✅ استيراد cors
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 5002;
 
-// ✅ CORS config (تسمح بطلبات من frontend مثل React)
+// ✅ CORS config
 app.use(cors({
-  origin: 'http://localhost:3000', // غيّرها لدومين تطبيقك إذا لزم
+  origin: 'http://localhost:3000',
   credentials: true
 }));
 
-// Middleware
+// ✅ جلسة المستخدم (ضروري لـ passport)
+app.use(session({
+  secret: 'yourSecret',
+  resave: false,
+  saveUninitialized: true
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// ✅ Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files (profile images)
-app.use('/uploads', express.static('uploads')); // Serve static profile images
+// ✅ Serve profile images
+app.use('/uploads', express.static('uploads'));
 
-
-// Routes
+// ✅ Routes
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api/cart', CartRoutes); // ✅ إضافة CartRoutes
-app.use('/api/orders', OrderRoutes); // ✅ إضافة OrderRoutes
+app.use('/api/cart', CartRoutes);
+app.use('/api/orders', OrderRoutes);
 
-// MongoDB Connection
+// ✅ MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -44,7 +57,7 @@ mongoose.connect(process.env.MONGO_URI, {
   console.error('❌ MongoDB connection error:', err.message);
 });
 
-// Start Server
+// ✅ Start Server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

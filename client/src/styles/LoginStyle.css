@@ -174,5 +174,9 @@
   cursor: pointer;
 }
 .password-input-wrapper .eye-icon:hover {
-  color: #6c3483;
+  color: #333;
 }
+
+/* لو حاب تطبق تأثير على العنصر اللي قبله مثل label (ما فيه span.details حالياً)
+   فممكن تضيف لاحقاً عنصر label ونعمل نفس تأثير .details */
+
