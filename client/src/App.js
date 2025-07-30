@@ -4,7 +4,7 @@ import RegistrationForm from './component/Register';
 import LoginForm from './component/Login'
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Success from './component/GoogleSuccess';
-
+import DashboardLayoutSlots from './component/dash';
 
 function App() {
   return (
@@ -13,6 +13,8 @@ function App() {
         <Routes>
           <Route path="/register" element={<RegistrationForm />} />
           <Route path="/login" element={<LoginForm />} />
+          <Route path="/dashboard" element={<DashboardLayoutSlots />} />
+
       <Route path="/success" element={<Success />} />
           {/* يمكنك إضافة المزيد من المسارات هنا */}
         </Routes>
