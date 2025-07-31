@@ -3,19 +3,26 @@ const bcrypt = require('bcryptjs');
 const sendEmail = require("../utils/sendEmail"); // تأكد من وجودها
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
-
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.register = async (req, res) => {
   try {
     const { username, email, password, fullName, phone } = req.body;
 
-    // تحقق إذا المستخدم موجود
+    // ✅ تحقق إذا المستخدم موجود
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: 'User already exists' });
 
-    // تحقق من قوة الباسورد (قبل التشفير)
+    // ✅ تحقق من صيغة الإيميل
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        message: 'Please enter a valid email address.'
+      });
+    }
+
+    // ✅ تحقق من قوة كلمة المرور
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
       return res.status(400).json({
@@ -23,10 +30,10 @@ exports.register = async (req, res) => {
       });
     }
 
-    // تشفير الباسورد
+    // ✅ تشفير كلمة السر
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // إنشاء المستخدم الجديد
+    // ✅ إنشاء المستخدم
     const user = new User({
       username,
       email,
@@ -34,13 +41,35 @@ exports.register = async (req, res) => {
       fullName,
       phone,
       profileImage: req.file ? req.file.filename : ''
-      // address غير مستخدم بناءً على كلامك
     });
 
+    // ✅ إنشاء توكن التحقق
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    user.verifyToken = token;
     await user.save();
 
+    // ✅ إرسال إيميل التفعيل
+    const verificationUrl = `http://localhost:3000/verify-email?token=${token}`;
+    const html = `
+      <h2>Verify your email</h2>
+      <p>Click the link below to verify your account:</p>
+      <a href="${verificationUrl}">${verificationUrl}</a>
+    `;
+
+    await sendEmail({
+      to: user.email,
+      subject: 'Verify your email - TalafhaStore',
+      html,
+    });
+
+    // ✅ الرد
     res.status(201).json({
-      message: 'User registered successfully.',
+      message: 'User registered successfully. Please check your email to verify your account.',
       user: {
         id: user._id,
         username: user.username,
@@ -55,6 +84,7 @@ exports.register = async (req, res) => {
 };
 
 
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -64,12 +94,17 @@ exports.login = async (req, res) => {
     if (!user)
       return res.status(400).json({ message: "User not found" });
 
+    // التحقق إذا الحساب غير مفعل
+    if (!user.verified) {
+      return res.status(403).json({ message: "Please verify your email before logging in." });
+    }
+
     // التحقق من كلمة المرور
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    // إنشاء JWT token (بدون role لأنك ما بتستخدمه)
+    // إنشاء JWT token
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET || "your_jwt_secret",
@@ -78,18 +113,17 @@ exports.login = async (req, res) => {
 
     // إرسال الرد
     res.status(200).json({
-  message: "Login successful",
-  token,
-  role: user.role, // ✅ أضف هذا السطر
-  user: {
-    id: user._id,
-    username: user.username,
-    email: user.email,
-    fullName: user.fullName,
-    profileImage: user.profileImage
-  }
-});
-
+      message: "Login successful",
+      token,
+      role: user.role,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        profileImage: user.profileImage
+      }
+    });
 
   } catch (err) {
     res.status(500).json({ message: "Login error", error: err.message });
@@ -197,22 +231,6 @@ exports.changePassword = async (req, res) => {
   }
 };
 
-exports.verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.query;
-
-    const user = await User.findOne({ verifyToken: token });
-    if (!user) return res.status(400).json({ message: "Invalid or expired token" });
-
-    user.verified = true;
-    user.verifyToken = null;
-    await user.save();
-
-    res.status(200).json({ message: "Email verified successfully" });
-  } catch (err) {
-    res.status(500).json({ message: "Verification failed", error: err.message });
-  }
-};
 
 exports.requestPasswordReset = async (req, res) => {
   try {
@@ -220,14 +238,13 @@ exports.requestPasswordReset = async (req, res) => {
 
     const user = await User.findOne({ email });
 
-    // ✅ لا تكشف أن الإيميل موجود أو لا (أفضل أمنيًا)
-    if (!user || !user.verified) {
+    // ✅ لا تكشف أن الإيميل موجود أو لا
+    if (!user) {
       return res.status(200).json({
-        message: "If this email exists and is verified, a reset link will be sent.",
+        message: "If this email exists, a reset link will be sent.",
       });
     }
 
-    // ✅ إنشاء توكن صالح لمدة 15 دقيقة
     const resetToken = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET || "your_jwt_secret",
@@ -239,10 +256,8 @@ exports.requestPasswordReset = async (req, res) => {
 
     await user.save();
 
-    // ✅ إعداد رابط إعادة التعيين
-const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+    const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
 
-    // ✅ إرسال الإيميل
     const message = `
       <h3>Reset Your Password</h3>
       <p>Click the link below to reset your password:</p>
@@ -250,14 +265,21 @@ const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
       <p>This link will expire in 15 minutes.</p>
     `;
 
-    await sendEmail(user.email, "Password Reset", message);
+await sendEmail({
+  to: user.email,
+  subject: "Password Reset",
+  html: message
+});
 
-    res.status(200).json({ message: "If this email exists and is verified, a reset link will be sent." });
+    res.status(200).json({ message: "If this email exists, a reset link will be sent." });
 
   } catch (err) {
     res.status(500).json({ message: "Error requesting password reset", error: err.message });
   }
 };
+
+
+
 exports.resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
@@ -293,6 +315,27 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ message: "Failed to reset password", error: err.message });
   }
 };
+// ✅ التحقق من صلاحية توكن إعادة تعيين الباسورد
+exports.verifyResetToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret");
+
+    const user = await User.findOne({
+      _id: decoded.id,
+      resetToken: token,
+      resetTokenExpiry: { $gt: Date.now() }
+    });
+
+    if (!user) return res.status(400).json({ valid: false });
+
+    res.status(200).json({ valid: true });
+  } catch (error) {
+    res.status(400).json({ valid: false });
+  }
+};
+
+
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password"); // إخفاء كلمة السر
@@ -301,6 +344,8 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Error fetching users", error: err.message });
   }
 };
+
+
 exports.googleLogin = async (req, res) => {
   const { token } = req.body;
 
@@ -316,20 +361,22 @@ exports.googleLogin = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      // أنشئ مستخدم جديد
       user = new User({
         username: email.split('@')[0],
         email,
         fullName: name,
-        profileImage: picture,
-        password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10), // باسورد عشوائي
-        role: 'user'
+        profileImage: picture, // ✅ أضف صورة Google
+        password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10),
+        role: 'user',
+        verified: true // ✅ عيّن المستخدم كـ مفعل تلقائيًا
       });
 
       await user.save();
+    } else if (!user.verified) {
+      user.verified = true; // ✅ فعّل المستخدم إذا لم يكن مفعل
+      await user.save();
     }
 
-    // أنشئ JWT token
     const jwtToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '1h'
     });
@@ -350,37 +397,86 @@ exports.googleLogin = async (req, res) => {
     res.status(401).json({ message: 'Invalid Google token', error: error.message });
   }
 };
+
+
 exports.googleCallback = async (req, res) => {
   try {
-    const { id, displayName, emails } = req.user; // من passport
+    const { displayName, emails, photos } = req.user;
     const email = emails[0].value;
+    const picture = photos?.[0]?.value || '';
 
-    // 🔍 تحقق إذا المستخدم موجود
     let user = await User.findOne({ email });
 
-    // ❌ مش موجود؟ أنشئ حساب جديد
     if (!user) {
       user = new User({
         username: displayName.toLowerCase().replace(/\s+/g, ''),
         email,
         firstName: displayName.split(' ')[0],
         lastName: displayName.split(' ')[1] || '',
-        role: 'user', // أو admin إذا بدك
-        password: 'GoogleOAuthUser', // غير مستخدم فعليًا
-        isActive: true
+        profileImage: picture,
+        role: 'user',
+        password: 'GoogleOAuthUser',
+        verified: true
       });
 
       await user.save();
+    } 
+    // ✅ فعّل المستخدم إذا لم يكن مفعل
+    else if (!user.verified || !user.profileImage) {
+      user.verified = true;
+      if (!user.profileImage) user.profileImage = picture;
+      await user.save();
     }
 
-    // ✅ أنشئ التوكن
     const token = generateToken(user._id);
 
-    // ✅ رجّع التوكن والبيانات
     res.redirect(`http://localhost:3000/google-success?token=${token}&role=${user.role}&name=${user.firstName}`);
   } catch (error) {
     console.error('Google login error:', error);
     res.status(500).json({ message: 'Google login failed' });
+  }
+};
+
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(400).json({ message: "User not found" });
+
+    if (user.verified) {
+      return res.status(200).json({ message: "Email already verified" });
+    }
+
+    if (user.verifyToken !== token) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    user.verified = true;
+    user.verifyToken = null;
+    await user.save();
+
+    res.status(200).json({ message: "Email verified successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Verification failed", error: err.message });
+  }
+};
+// 🔍 Check if username already exists
+exports.checkUsername = async (req, res) => {
+  const { username } = req.body;
+
+  if (!username || username.trim().length < 4) {
+    return res.json({ available: true }); // ما نتحقق إذا أقل من 4 حروف
+  }
+
+  try {
+    const user = await User.findOne({ username: username.trim() });
+    res.json({ available: !user }); // موجود = false
+  } catch (err) {
+    console.log(error)
+    console.error('Username check error:', err.message);
+    res.status(500).json({ available: false });
   }
 };
 

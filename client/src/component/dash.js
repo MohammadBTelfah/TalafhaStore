@@ -61,6 +61,7 @@ function DemoPageContent({ pathname, profileData }) {
       {pathname ==="/Profile" && (
       <AdminProfile profileData={profileData} />
     )}
+    
 
     </Box>
   );

@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   email: {
     type: String,
@@ -21,18 +22,38 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: false,
-    default: '0000000000' // رقم وهمي، يجب تغييره لاحقاً من الواجهة
+    default: '0000000000'
   },
   role: {
     type: String,
     enum: ['user', 'admin'],
-    default: 'admin'
+    default: 'user'
   },
   profileImage: {
     type: String,
-    default: '' // صورة افتراضية إن لزم
+    default: ''
   },
-  // 'createdAt' and 'updatedAt' will be automatically added by Mongoose's timestamps option
+
+  // ✅ الحقول الجديدة
+  resetToken: {
+    type: String,
+    default: null,
+  },
+  resetTokenExpiry: {
+    type: Date,
+    default: null,
+  },
+
+  verified: {
+  type: Boolean,
+  default: false
+},
+verifyToken: {
+  type: String,
+  default: null
+}
+
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

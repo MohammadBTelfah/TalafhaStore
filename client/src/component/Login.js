@@ -9,6 +9,8 @@ export default function LoginForm() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [shake, setShake] = useState(false);
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -20,7 +22,6 @@ export default function LoginForm() {
       const res = await axios.post('http://localhost:5002/api/users/login', formData);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('role', res.data.role || res.data.user?.role);
-
       setSuccess(true);
       setTimeout(() => {
         const role = res.data.role || res.data.user?.role;
@@ -28,7 +29,9 @@ export default function LoginForm() {
       }, 2500);
     } catch (err) {
       console.error('Login error:', err.response?.data?.message || err.message);
-      alert(err.response?.data?.message || 'Login failed.');
+      setErrorMessage('Password is not correct');
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
     }
   };
 
@@ -40,9 +43,7 @@ export default function LoginForm() {
     <div className="login-page">
       {success && (
         <div className="success-overlay">
-          <div className="circle">
-            <span className="check">✓</span>
-          </div>
+          <span className="check-icon">✔</span>
         </div>
       )}
 
@@ -61,7 +62,7 @@ export default function LoginForm() {
             />
           </div>
 
-          <div className="input-box password-box">
+          <div className={`input-box password-box ${shake ? 'shake' : ''}`}>
             <span className="details">Password</span>
             <div className="password-input-wrapper">
               <input
@@ -71,16 +72,19 @@ export default function LoginForm() {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                className={errorMessage ? 'error' : ''}
               />
               <span className="eye-icon" onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
               </span>
             </div>
+            {errorMessage && <div className="error-message">{errorMessage}</div>}
           </div>
 
-          <div className="forgot-password">
-            <a href="#">Forgot password?</a>
-          </div>
+          <Link to="/forgot-password" className="forgot-password-link">
+           Forgot password?
+          </Link>
+
 
           <div className="button">
             <input type="submit" value="Login" />
