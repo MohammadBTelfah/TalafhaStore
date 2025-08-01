@@ -89,38 +89,39 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // البحث عن المستخدم
+    // ✅ البحث عن المستخدم
     const user = await User.findOne({ email });
     if (!user)
       return res.status(400).json({ message: "User not found" });
 
-    // التحقق إذا الحساب غير مفعل
+    // ✅ تحقق إذا الحساب مفعل
     if (!user.verified) {
       return res.status(403).json({ message: "Please verify your email before logging in." });
     }
 
-    // التحقق من كلمة المرور
+    // ✅ تحقق من كلمة المرور
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    // إنشاء JWT token
+    // ✅ إنشاء التوكن وفيه الدور
     const token = jwt.sign(
-      { id: user._id },
+      { id: user._id, role: user.role }, // ← لازم تتأكد إنها هيك
       process.env.JWT_SECRET || "your_jwt_secret",
       { expiresIn: "1h" }
     );
 
-    // إرسال الرد
+    // ✅ إرسال الرد
     res.status(200).json({
       message: "Login successful",
       token,
-      role: user.role,
+      role: user.role, // ← ضروري ترجع الدور هون
       user: {
         id: user._id,
         username: user.username,
         email: user.email,
         fullName: user.fullName,
+        role: user.role, // ← ممكن تستخدمه بالفرونت
         profileImage: user.profileImage
       }
     });
@@ -129,7 +130,6 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: "Login error", error: err.message });
   }
 };
-
 
 exports.getUserProfile = async (req, res) => {
   try {
@@ -361,25 +361,29 @@ exports.googleLogin = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
+      // ✅ أنشئ مستخدم جديد
       user = new User({
         username: email.split('@')[0],
         email,
         fullName: name,
-        profileImage: picture, // ✅ أضف صورة Google
+        profileImage: picture,
         password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10),
-        role: 'user',
-        verified: true // ✅ عيّن المستخدم كـ مفعل تلقائيًا
+        role: 'user', // ← هون تقدر تغيرها لـ 'admin' لو بدك
+        verified: true
       });
 
       await user.save();
     } else if (!user.verified) {
-      user.verified = true; // ✅ فعّل المستخدم إذا لم يكن مفعل
+      user.verified = true;
       await user.save();
     }
 
-    const jwtToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: '1h'
-    });
+    // ✅ تأكد إنك تجيب الدور الصحيح قبل إنشاء التوكن
+    const jwtToken = jwt.sign(
+      { id: user._id, role: user.role }, // ← هاي السطر المهم
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
     res.status(200).json({
       token: jwtToken,
@@ -428,7 +432,7 @@ exports.googleCallback = async (req, res) => {
       await user.save();
     }
 
-    const token = generateToken(user._id);
+const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.redirect(`http://localhost:3000/google-success?token=${token}&role=${user.role}&name=${user.firstName}`);
   } catch (error) {

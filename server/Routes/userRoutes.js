@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
-const generateToken = require('../utils/generateToken');
 const multer = require('multer');
 
 const userController = require('../Controllers/userController');
@@ -50,28 +49,26 @@ router.get('/get-all', AdminAuth, userController.getAllUsers);
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 // 2. بعد المصادقة، استلام البيانات والرد
-router.get(
-  '/google/callback',
-  passport.authenticate('google', {
-    failureRedirect: '/login',
-    session: false,
-  }),
+// بعد المصادقة
+router.get('/google/callback',
+  passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login' }),
   async (req, res) => {
     try {
-      // ✅ تأكد إنه فيه req.user
-      if (!req.user) {
-        return res.redirect('http://localhost:3000/login?error=GoogleAuthFailed');
-      }
+      const jwt = require('jsonwebtoken');
+      const jwtToken = jwt.sign(
+        { id: req.user._id, role: req.user.role }, // ✅ ضفنا الدور داخل التوكن أيضاً
+        process.env.JWT_SECRET || 'your_jwt_secret',
+        { expiresIn: '1d' }
+      );
 
-      // ✅ إنشاء التوكن
-      const token = generateToken(req.user._id);
-      const role = req.user.role;
+      const role = req.user.role || 'user';
 
-      // ✅ إرسالهم بالرابط لفرونت إند
-      res.redirect(`http://localhost:3000/success?token=${token}&role=${role}`);
-    } catch (error) {
-      console.error('Google Auth error:', error);
-      res.redirect('http://localhost:3000/login?error=GoogleAuthError');
+      // ✅ إعادة التوجيه مع التوكن والدور
+      const redirectURL = `http://localhost:3000/oauth-success?token=${jwtToken}&role=${role}`;
+      res.redirect(redirectURL);
+    } catch (err) {
+      console.error('🔴 Redirect error after Google login:', err);
+      res.redirect('http://localhost:3000/login');
     }
   }
 );

@@ -31,6 +31,7 @@ exports.createProduct = async (req, res) => {
     await product.save();
     res.status(201).json({ message: 'Product created successfully', product });
   } catch (err) {
+      console.error("🔥 ERROR CREATING PRODUCT:", err); // اطبع الخطأ في السيرفر
     res.status(500).json({ message: 'Error creating product', error: err.message });
   }
 };

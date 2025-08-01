@@ -7,16 +7,16 @@ const Success = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
-    const role = params.get('role');
+    const role = params.get('role') || 'user'; // احتياطي
 
-    if (token && role) {
+    if (token) {
       localStorage.setItem('token', token);
       localStorage.setItem('role', role);
 
-      // ✅ تأخير التوجيه لفترة قصيرة بعد التخزين
+      // ✅ استخدم setTimeout للتأكد من تخزين البيانات قبل التوجيه
       setTimeout(() => {
-        navigate('/');
-      }, 100); // 100ms كافية للتخزين
+        navigate(role === 'admin' ? '/dashboard' : '/');
+      }, 100);
     } else {
       console.warn("Token or role missing");
       navigate('/login');

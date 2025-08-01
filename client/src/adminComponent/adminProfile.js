@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import {
   Box, Container, Typography, Avatar, IconButton, TextField,
@@ -146,11 +146,14 @@ const AdminProfile = ({ profileData }) => {
               onChange={handleImageUpload}
             />
             <label htmlFor="avatar-upload">
-              <StyledAvatar
-                src={`http://127.0.0.1:5002/uploads/${localProfile.profileImage}`}
-                alt="Admin"
-              />
-            </label>
+  <StyledAvatar
+    src={
+      localProfile.profileImage?.startsWith("http")
+        ? localProfile.profileImage
+        : `http://127.0.0.1:5002/uploads/${localProfile.profileImage}`
+    }
+  />
+</label>
           </Box>
 
           {["username", "email", "fullName", "phone"].map((field) => (
@@ -210,21 +213,23 @@ const AdminProfile = ({ profileData }) => {
                       onChange={(e) =>
                         setPasswordData({ ...passwordData, [type]: e.target.value })
                       }
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() =>
-                                setShowFields((prev) => ({
-                                  ...prev,
-                                  [type]: !prev[type],
-                                }))
-                              }
-                            >
-                              {showFields[type] ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
+                      slotProps={{
+                        input: {
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={() =>
+                                  setShowFields((prev) => ({
+                                    ...prev,
+                                    [type]: !prev[type],
+                                  }))
+                                }
+                              >
+                                {showFields[type] ? <VisibilityOff /> : <Visibility />}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        },
                       }}
                     />
                   ))}

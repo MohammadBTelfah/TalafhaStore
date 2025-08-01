@@ -20,7 +20,9 @@ import { DemoProvider, useDemoRouter } from '@toolpad/core/internal';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminProfile from './adminProfile';
+import ProductDashboard from './ProductManagement';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import { Category } from '../adminComponent/AddCategory';
 import axios from 'axios';
 import RedeemIcon from '@mui/icons-material/Redeem';
 import CategoryIcon from '@mui/icons-material/Category';
@@ -61,6 +63,19 @@ function DemoPageContent({ pathname, profileData }) {
       {pathname ==="/Profile" && (
       <AdminProfile profileData={profileData} />
     )}
+
+    
+      {pathname === "/Product" && (
+        <Typography variant="h4" gutterBottom>
+          <ProductDashboard/>
+        </Typography>
+      )}
+       {pathname === "/category" && (
+        <Typography variant="h4" gutterBottom>
+          <Category/>
+        </Typography>
+      )}
+    
     
 
     </Box>
@@ -138,10 +153,13 @@ function DashboardLayoutSlots(props) {
   const [profileData, setProfileData] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
+const handleLogout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('role');      // 🔥 مهم جداً
+  // localStorage.removeItem('darkMode');  // لو بدك تمسحها كمان
+  navigate('/login');
+};
+
 
   const NAVIGATION = [
     {

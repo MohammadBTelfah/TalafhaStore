@@ -21,7 +21,8 @@ export default function LoginForm() {
     try {
       const res = await axios.post('http://localhost:5002/api/users/login', formData);
       localStorage.setItem('token', res.data.token);
-      localStorage.setItem('role', res.data.role || res.data.user?.role);
+const userRole = res.data.role || (res.data.user && res.data.user.role) || 'user';
+localStorage.setItem('role', userRole);
       setSuccess(true);
       setTimeout(() => {
         const role = res.data.role || res.data.user?.role;
