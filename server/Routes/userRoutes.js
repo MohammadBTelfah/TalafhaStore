@@ -24,8 +24,11 @@ router.post('/login', userController.login);
 router.get('/profile', auth, userController.getUserProfile);
 router.put('/update-profile', auth, upload.single('profileImage'), userController.updateUserProfile);
 router.post('/change-password', auth, userController.changePassword);
-router.delete('/delete', auth, userController.deleteUser);
+router.delete('/delete/:id', auth, userController.deleteUser);
 router.post('/check-username', userController.checkUsername);
+router.get('/get-all-user', AdminAuth, userController.getAllUsers);
+router.put('/update/:id', AdminAuth, upload.single('profileImage'), userController.updateAnyUserByAdmin);
+
 
 
 /* ========== ✅ Password Reset & Email ========== */

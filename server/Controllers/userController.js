@@ -183,7 +183,8 @@ exports.updateUserProfile = async (req, res) => {
 //delete user 
 exports.deleteUser = async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(req.user._id);
+    const deletedUser = await User.findByIdAndDelete(req.params.id); // ← الحل الصحيح
+
     if (!deletedUser) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -483,4 +484,32 @@ exports.checkUsername = async (req, res) => {
     res.status(500).json({ available: false });
   }
 };
+exports.updateAnyUserByAdmin = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { username, email, fullName, phone, role } = req.body;
 
+    const updateData = {
+      username,
+      email,
+      fullName,
+      phone,
+      role
+    };
+
+    if (req.file) {
+      updateData.profileImage = req.file.filename;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'User updated successfully', user: updatedUser });
+  } catch (error) {
+    console.error('Admin user update error:', error);
+    res.status(500).json({ message: 'Server error during update' });
+  }
+};

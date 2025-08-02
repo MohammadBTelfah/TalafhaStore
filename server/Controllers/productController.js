@@ -5,13 +5,16 @@ const path = require('path');
 exports.createProduct = async (req, res) => {
   try {
     const {
-      prodName,
-      prodPrice,
-      prodDescription,
-      prodCategory,
-      prodStock,
-      prodBrand
-    } = req.body;
+  prodName,
+  prodPrice,
+  prodDescription,
+  prodCategory,
+  prodStock,
+  prodBrand,
+  discount,
+  isFeatured
+} = req.body;
+
 
     const prodImage = req.file ? req.file.filename : null;
     if (!prodImage) {
@@ -19,14 +22,16 @@ exports.createProduct = async (req, res) => {
     }
 
     const product = new Product({
-      prodName,
-      prodPrice,
-      prodDescription,
-      prodCategory,
-      prodStock,
-      prodImage,
-      prodBrand
-    });
+  prodName,
+  prodPrice,
+  prodDescription,
+  prodCategory,
+  prodStock,
+  prodImage,
+  prodBrand,
+  discount: Number(discount),
+  isFeatured: isFeatured === 'true' // لأن القيمة قادمة من FormData كسلسلة
+});
 
     await product.save();
     res.status(201).json({ message: 'Product created successfully', product });
@@ -64,22 +69,27 @@ exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      prodName,
-      prodPrice,
-      prodDescription,
-      prodCategory,
-      prodStock,
-      prodBrand
-    } = req.body;
+  prodName,
+  prodPrice,
+  prodDescription,
+  prodCategory,
+  prodStock,
+  prodBrand,
+  discount,
+  isFeatured
+} = req.body;
+
 
     const updateData = {
-      prodName,
-      prodPrice,
-      prodDescription,
-      prodCategory,
-      prodStock,
-      prodBrand
-    };
+  prodName,
+  prodPrice,
+  prodDescription,
+  prodCategory,
+  prodStock,
+  prodBrand,
+  discount: Number(discount),
+  isFeatured: isFeatured === 'true'
+};
 
     if (req.file) {
       updateData.prodImage = req.file.filename;

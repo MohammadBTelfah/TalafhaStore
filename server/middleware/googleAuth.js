@@ -27,7 +27,7 @@ passport.use(
             password: hashedPassword,
             phone: '0000000000',
             fullName: profile.displayName || 'Google User',
-            role: 'admin',
+            role: 'user',
             profileImage: photo,
             verified: true,
           });
