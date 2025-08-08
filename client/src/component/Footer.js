@@ -25,6 +25,8 @@ const NavLink = styled(Typography)(({ theme }) => ({
   padding: theme.spacing(1, 2),
   transition: "all 0.3s ease",
   position: "relative",
+  color: "#fff",
+  textDecoration: "none", // <-- هذا هو المهم
   "&:after": {
     content: '""',
     position: "absolute",
@@ -42,6 +44,7 @@ const NavLink = styled(Typography)(({ theme }) => ({
     }
   }
 }));
+
 
 const Footer = () => {
   const socialLinks = [
