@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, IconButton, TextField, Switch, Avatar, Snackbar, Alert, Tooltip
+  Paper, IconButton, TextField, Switch, Avatar, Snackbar, Alert, Tooltip,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button
 } from "@mui/material";
 import { FiEdit2, FiTrash2, FiSave } from "react-icons/fi";
 import axios from "axios";
@@ -11,6 +12,8 @@ const UserManagement = () => {
   const [editIndex, setEditIndex] = useState(null);
   const [editedUser, setEditedUser] = useState({});
   const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   const fetchUsers = async () => {
     try {
@@ -23,7 +26,6 @@ const UserManagement = () => {
     } catch (err) {
       console.error("Error fetching users:", err);
     }
-    
   };
 
   const handleEdit = (index) => {
@@ -36,48 +38,50 @@ const UserManagement = () => {
   };
 
   const handleSave = async () => {
-  try {
-    const res = await axios.put(
-      `http://127.0.0.1:5002/api/users/update/${editedUser._id}`, // لاحظ هنا استخدام ID
-      editedUser,
-      {
+    try {
+      const res = await axios.put(
+        `http://127.0.0.1:5002/api/users/update/${editedUser._id}`,
+        editedUser,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      const updated = [...users];
+      updated[editIndex] = res.data.user;
+      setUsers(updated);
+      setEditIndex(null);
+      setNotification({ open: true, message: "User updated", severity: "success" });
+    } catch (err) {
+      console.error("Update error:", err);
+      setNotification({ open: true, message: "Failed to update", severity: "error" });
+    }
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await axios.delete(`http://127.0.0.1:5002/api/users/delete/${selectedUserId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
+        }
+      });
 
-    const updated = [...users];
-    updated[editIndex] = res.data.user;
-    setUsers(updated);
-    setEditIndex(null);
-    setNotification({ open: true, message: "User updated", severity: "success" });
-  } catch (err) {
-    console.error("Update error:", err);
-    setNotification({ open: true, message: "Failed to update", severity: "error" });
-  }
-};
-
-
-  const handleDelete = async (id) => {
-  try {
-    await axios.delete(`http://127.0.0.1:5002/api/users/delete/${id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      }
-    });
-    setUsers(users.filter((user) => user._id !== id));
-    setNotification({ open: true, message: "User deleted", severity: "success" });
-  } catch (err) {
-    console.error("Delete error:", err);
-    setNotification({ open: true, message: "Failed to delete", severity: "error" });
-  }
-};
+      setUsers(users.filter((user) => user._id !== selectedUserId));
+      setNotification({ open: true, message: "User deleted", severity: "success" });
+    } catch (err) {
+      console.error("Delete error:", err);
+      setNotification({ open: true, message: "Failed to delete", severity: "error" });
+    } finally {
+      setConfirmOpen(false);
+      setSelectedUserId(null);
+    }
+  };
 
   useEffect(() => {
     fetchUsers();
   }, []);
-
 
   return (
     <>
@@ -104,6 +108,11 @@ const UserManagement = () => {
                         ? user.profileImage
                         : `http://127.0.0.1:5002/uploads/${user.profileImage}`
                     }
+                    alt="user avatar"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://i.pravatar.cc/150?u=default";
+                    }}
                   />
                 </TableCell>
                 <TableCell>
@@ -175,7 +184,13 @@ const UserManagement = () => {
                     </Tooltip>
                   )}
                   <Tooltip title="Delete">
-                    <IconButton onClick={() => handleDelete(user._id)} color="error">
+                    <IconButton
+                      onClick={() => {
+                        setSelectedUserId(user._id);
+                        setConfirmOpen(true);
+                      }}
+                      color="error"
+                    >
                       <FiTrash2 />
                     </IconButton>
                   </Tooltip>
@@ -186,6 +201,28 @@ const UserManagement = () => {
         </Table>
       </TableContainer>
 
+      {/* 🔒 Dialog تأكيد الحذف */}
+      <Dialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+      >
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this account? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ✅ Snackbar للإشعارات */}
       <Snackbar
         open={notification.open}
         autoHideDuration={5000}

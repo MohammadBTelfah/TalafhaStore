@@ -138,11 +138,19 @@ const AdminProfile = ({ profileData }) => {
   };
 
   // ✅ Log avatar URL before rendering
-  const avatarSrc = localProfile?.profileImage
+const avatarSrc = localProfile?.profileImage
   ? localProfile.profileImage.includes("googleusercontent")
     ? localProfile.profileImage
-    : `http://127.0.0.1:5002/uploads/${localProfile.profileImage}`
+    : `http://localhost:5002/uploads/${localProfile.profileImage}`
   : "https://i.pravatar.cc/150?u=default";
+<StyledAvatar
+  src={avatarSrc}
+  alt="Profile"
+  onError={(e) => {
+    e.target.onerror = null;
+    e.target.src = "https://i.pravatar.cc/150?u=default"; // fallback
+  }}
+/>
 
   return (
     <Container maxWidth="md">
