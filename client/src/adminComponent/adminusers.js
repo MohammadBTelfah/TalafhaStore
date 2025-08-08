@@ -23,6 +23,7 @@ const UserManagement = () => {
     } catch (err) {
       console.error("Error fetching users:", err);
     }
+    
   };
 
   const handleEdit = (index) => {
