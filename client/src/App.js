@@ -10,6 +10,8 @@ import ResetPassword from './EmailCompoent/ResetPassword';
 import VerifyEmail from './EmailCompoent/VerifyEmail';
 import Navbar from './component/Navbar';
 import Footer from './component/Footer';
+import ContactUs from './component/contactus';
+import AboutUs from './component/aboutus';
 
 function App() {
   return (
@@ -24,6 +26,11 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+           <Route path="/contact" element={<ContactUs />} />
+           <Route path="/about" element={<AboutUs />} />
+
+
+        
         </Routes>
         <Footer />
       </BrowserRouter>

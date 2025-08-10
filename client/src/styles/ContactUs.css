@@ -1,0 +1,180 @@
+:root {
+  --bg-grad: linear-gradient(135deg, #71b7e6, #9b59b6);
+  --text: #ffffff;
+  --muted: #c8c9d3;
+  --white: #ffffff;
+  --radius: 18px;
+  --outline: 2px;
+}
+
+/* ==== Page background ==== */
+.cu-page {
+  min-height: 100svh;
+  background: var(--bg-grad) fixed;
+  background-size: 160% 160%;
+  animation: cu-bg-pan 20s linear infinite;
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Tahoma, Arial, sans-serif;
+  margin: 0;
+}
+@keyframes cu-bg-pan { to { background-position: 200% 200%; } }
+
+/* ==== Layout wrappers ==== */
+.cu-container { max-width: 1100px; margin: 0 auto; padding: 28px 18px 60px; }
+.cu-header { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:8px 6px 22px; }
+.cu-header h1 { margin:0; font-size: clamp(24px, 2.8vw, 36px); }
+
+/* ==== Top social icons ==== */
+.cu-top-icons { display:flex; gap:14px; align-items:center; }
+.cu-top-icon {
+  width:42px; height:42px; display:grid; place-items:center; border-radius:50%;
+  background: rgba(255,255,255,.15);
+  color:#fff; text-decoration:none; font-size:18px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.25) inset, 0 2px 8px rgba(0,0,0,.15);
+  transition: .3s ease; position: relative; overflow: hidden;
+}
+.cu-top-icon:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(0,0,0,.3) inset, 0 4px 10px rgba(0,0,0,.2);
+}
+
+/* ==== Grid ==== */
+.cu-grid { display:grid; grid-template-columns: .9fr 1.1fr; gap:26px; }
+@media (max-width: 900px) { .cu-grid { grid-template-columns: 1fr; } }
+
+/* =========================================================
+   Reusable animated white border (cards + form)
+========================================================= */
+.animated-border {
+  position: relative;
+  border: var(--outline) solid var(--white);
+  border-radius: var(--radius);
+  overflow: hidden;
+  isolation: isolate;
+}
+.animated-border::before {
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--bg-grad);
+  background-size: 200% 200%;
+  padding: 2px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  animation: cu-border-run 2.2s linear infinite;
+  animation-play-state: paused;
+  z-index: 1;
+  pointer-events: none;
+}
+@keyframes cu-border-run { to { background-position: 200% 200%; } }
+.animated-border:hover::before {
+  opacity: 1;
+  animation-play-state: running;
+}
+
+@supports not (mask-composite: exclude) {
+  .animated-border:hover { box-shadow: 0 0 0 2px #fff, 0 0 16px #9b59b688 inset; }
+}
+
+/* ==== Cards ==== */
+.cu-cards { display:grid; gap:18px; }
+.cu-card {
+  background: rgba(13, 16, 32, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  padding: 22px 22px 24px;
+  border-radius: var(--radius);
+  color:#fff;
+}
+.cu-card-icon {
+  width:64px; height:64px; display:grid; place-items:center; border-radius:16px;
+  background: #ffffff14; font-size:30px; margin-bottom:10px; border:1px solid #ffffff66;
+}
+.cu-card-title { margin: 6px 0 6px; font-size: 20px; }
+.cu-card-desc { margin:0 0 12px; color: var(--muted); line-height: 1.7; }
+.cu-card-link {
+  color:#fff; text-decoration:none; font-weight:700;
+  border-bottom:1px dashed rgba(255,255,255,.7);
+}
+.cu-card-link:hover { border-bottom-color:#fff; }
+
+/* ==== Brand colors for icons only ==== */
+.icon-instagram {
+  background: radial-gradient(circle at 30% 107%,
+    #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+  color: #fff !important;
+}
+.icon-github {
+  background: #24292E;
+  color: #fff !important;
+}
+.icon-facebook {
+  background: #1877F2;
+  color: #fff !important;
+}
+.icon-x {
+  background: #000000;
+  color: #fff !important;
+}
+
+/* Top icons + card icons same sizing rules */
+.cu-top-icon,
+.cu-card-icon {
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 18px rgba(0,0,0,.25) inset, 0 2px 8px rgba(0,0,0,.15);
+}
+
+/* Bigger size for card icons */
+.cu-card-icon {
+  width: 64px;
+  height: 64px;
+  font-size: 30px;
+  border-radius: 16px;
+}
+
+/* ==== Form ==== */
+.cu-form {
+  background: rgba(13, 16, 32, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  padding: 22px;
+  border-radius: var(--radius);
+}
+
+/* Fields */
+.cu-field { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.cu-field label { font-weight:600; }
+.cu-field input, .cu-field textarea {
+  background: rgba(12,14,24,0.45);
+  border: 1px solid rgba(255,255,255,0.25);
+  color:#fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+  transition: .2s ease, background .25s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.cu-field input::placeholder, .cu-field textarea::placeholder { color: #cfd3e0; }
+.cu-field input:focus, .cu-field textarea:focus {
+  background: rgba(12,14,24,0.55);
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.12);
+}
+
+/* Button */
+.cu-btn {
+  display:inline-block; border:none; padding:12px 16px; border-radius:12px; cursor:pointer; font-weight:700;
+  color:#0e1020; background:#ffffff; transition:.2s ease;
+}
+.cu-btn:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+}

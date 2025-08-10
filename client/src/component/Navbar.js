@@ -70,8 +70,8 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
 
   const pages = [
     { name: "Home", path: "/", icon: <FiHome /> },
-    { name: "Products", path: "/products", icon: <FiPackage /> },
     { name: "About Us", path: "/about", icon: <FiInfo /> },
+    { name: "Products", path: "/products", icon: <FiPackage /> },
     { name: "Contact Us", path: "/contact", icon: <FiPhone /> },
   ];
 
