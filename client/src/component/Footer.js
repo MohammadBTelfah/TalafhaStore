@@ -3,101 +3,112 @@ import { Box, Container, Grid, IconButton, Typography, Tooltip } from "@mui/mate
 import { styled } from "@mui/system";
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaGithub } from "react-icons/fa";
 
-const FooterContainer = styled(Box)(({ theme }) => ({
-  background: "linear-gradient(135deg, #71b7e6, #9b59b6)",
+/* ====== Helpers to pass custom prop to styled ====== */
+const forward = (p) => p !== "darkMode";
+
+/* ====== Container ====== */
+const FooterContainer = styled(Box, { shouldForwardProp: forward })(({ theme, darkMode }) => ({
+  background: darkMode
+    ? "#0B0D19" // Dark: أسود صافي
+    : "linear-gradient(135deg, #71b7e6, #9b59b6)", // Light: التدرّج
   padding: theme.spacing(4, 0),
   color: "#fff",
-  boxShadow: "0px -4px 10px rgba(0, 0, 0, 0.1)"
+  boxShadow: darkMode ? "none" : "0px -4px 10px rgba(0, 0, 0, 0.1)",
+  borderTop: darkMode ? "1px solid rgba(255,255,255,.08)" : "none",
 }));
 
-const SocialIcon = styled(IconButton)(({ theme }) => ({
+/* ====== Social icon ====== */
+const SocialIcon = styled(IconButton, { shouldForwardProp: forward })(({ theme, darkMode }) => ({
   color: "#fff",
   margin: theme.spacing(0, 1),
-  transition: "all 0.3s ease",
+  width: 44,
+  height: 44,
+  borderRadius: "50%",
+  border: darkMode ? "1px solid rgba(255,255,255,.25)" : "1px solid rgba(255,255,255,.35)",
+  backgroundColor: darkMode ? "rgba(255,255,255,.08)" : "rgba(255,255,255,.15)",
+  transition: "transform .25s ease, background-color .25s ease, box-shadow .25s ease",
   "&:hover": {
-    transform: "scale(1.1)",
-    backgroundColor: "rgba(255, 255, 255, 0.1)"
-  }
+    transform: "translateY(-2px)",
+    backgroundColor: darkMode ? "rgba(255,255,255,.12)" : "rgba(255,255,255,.22)",
+    boxShadow: "0 6px 14px rgba(0,0,0,.25)",
+  },
 }));
 
-const NavLink = styled(Typography)(({ theme }) => ({
+/* ====== Nav link ====== */
+const NavLink = styled(Typography, { shouldForwardProp: forward })(({ theme, darkMode }) => ({
   cursor: "pointer",
   padding: theme.spacing(1, 2),
-  transition: "all 0.3s ease",
-  position: "relative",
   color: "#fff",
-  textDecoration: "none", // <-- هذا هو المهم
+  position: "relative",
+  textDecoration: "none",
+  userSelect: "none",
   "&:after": {
     content: '""',
     position: "absolute",
     width: 0,
-    height: "2px",
-    bottom: 0,
+    height: 2,
+    bottom: 6,
     left: "50%",
     backgroundColor: "#fff",
-    transition: "all 0.3s ease"
+    transition: "width .25s ease, left .25s ease",
+    opacity: 0.9,
   },
-  "&:hover": {
-    "&:after": {
-      width: "80%",
-      left: "10%"
-    }
-  }
+  "&:hover:after": { width: "80%", left: "10%" },
 }));
 
-
-const Footer = () => {
+/* ====== Component ====== */
+const Footer = ({ darkMode = false }) => {
   const socialLinks = [
-    { icon: <FaFacebook size={24} />, label: "Facebook", url: "#" },
-    { icon: <FaTwitter size={24} />, label: "Twitter", url: "#" },
-    { icon: <FaInstagram size={24} />, label: "Instagram", url: "#" },
-    { icon: <FaLinkedin size={24} />, label: "LinkedIn", url: "#" },
-    { icon: <FaGithub size={24} />, label: "GitHub", url: "#" }
+    { icon: <FaFacebook size={20} />, label: "Facebook", url: "#" },
+    { icon: <FaTwitter size={20} />, label: "Twitter", url: "#" },
+    { icon: <FaInstagram size={20} />, label: "Instagram", url: "#" },
+    { icon: <FaLinkedin size={20} />, label: "LinkedIn", url: "#" },
+    { icon: <FaGithub size={20} />, label: "GitHub", url: "#" },
   ];
 
   const navLinks = ["Home", "About Us", "Products", "Contact Us", "Profile"];
 
   return (
-    <FooterContainer component="footer">
+    <FooterContainer component="footer" darkMode={darkMode}>
       <Container maxWidth="lg">
         <Grid container spacing={4} direction="column" alignItems="center">
+          {/* Social */}
           <Grid item>
-            <Box display="flex" flexWrap="wrap" justifyContent="center" gap={2}>
-              {socialLinks.map((social, index) => (
-                <Tooltip key={index} title={social.label} placement="top">
+            <Box display="flex" flexWrap="wrap" justifyContent="center" gap={1.5}>
+              {socialLinks.map((s, i) => (
+                <Tooltip key={i} title={s.label} placement="top">
                   <SocialIcon
-                    aria-label={social.label}
-                    href={social.url}
+                    darkMode={darkMode}
+                    aria-label={s.label}
+                    component="a"
+                    href={s.url}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {social.icon}
+                    {s.icon}
                   </SocialIcon>
                 </Tooltip>
               ))}
             </Box>
           </Grid>
 
+          {/* Nav */}
           <Grid item>
             <Box
               display="flex"
               flexWrap="wrap"
               justifyContent="center"
-              gap={2}
-              sx={{
-                flexDirection: { xs: "column", sm: "row" },
-                alignItems: "center"
-              }}
+              gap={1}
+              sx={{ flexDirection: { xs: "column", sm: "row" }, alignItems: "center" }}
             >
-              {navLinks.map((link, index) => (
+              {navLinks.map((link, i) => (
                 <NavLink
-                  key={index}
+                  key={i}
+                  darkMode={darkMode}
                   variant="body1"
                   component="a"
                   href="#"
-                  sx={{
-                    textAlign: { xs: "center", sm: "left" }
-                  }}
+                  sx={{ textAlign: { xs: "center", sm: "left" } }}
                 >
                   {link}
                 </NavLink>
@@ -105,8 +116,9 @@ const Footer = () => {
             </Box>
           </Grid>
 
+          {/* Copy */}
           <Grid item>
-            <Typography variant="body2" align="center">
+            <Typography variant="body2" align="center" sx={{ opacity: 0.9 }}>
               © {new Date().getFullYear()} Your Company Name. All rights reserved.
             </Typography>
           </Grid>

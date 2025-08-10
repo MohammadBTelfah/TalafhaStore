@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "../styles/ContactUs.css";
 import { FaInstagram, FaGithub, FaFacebook, FaXTwitter } from "react-icons/fa6";
 
-export default function ContactUs() {
+export default function ContactUs({ darkMode }) {
   const [values, setValues] = useState({
     name: "",
     email: "",
@@ -22,9 +22,9 @@ export default function ContactUs() {
 
   const socials = [
     { name: "Instagram", icon: <FaInstagram />, href: SOCIAL_LINKS.instagram, desc: "Follow our latest photos and stories" },
-    { name: "GitHub",    icon: <FaGithub    />, href: SOCIAL_LINKS.github,    desc: "Explore projects and repositories" },
-    { name: "Facebook",  icon: <FaFacebook  />, href: SOCIAL_LINKS.facebook,  desc: "Join our community and share your thoughts" },
-    { name: "X",         icon: <FaXTwitter  />, href: SOCIAL_LINKS.x,         desc: "Tweet with us and follow quick updates" },
+    { name: "GitHub", icon: <FaGithub />, href: SOCIAL_LINKS.github, desc: "Explore projects and repositories" },
+    { name: "Facebook", icon: <FaFacebook />, href: SOCIAL_LINKS.facebook, desc: "Join our community and share your thoughts" },
+    { name: "X", icon: <FaXTwitter />, href: SOCIAL_LINKS.x, desc: "Tweet with us and follow quick updates" },
   ];
 
   const handleChange = (e) => {
@@ -53,18 +53,18 @@ export default function ContactUs() {
   };
 
   return (
-    <main className="cu-page">
+    <main className={`cu-page ${darkMode ? "cu-dark" : ""}`}>
       <div className="cu-container">
         <header className="cu-header">
           <h1>Contact Us</h1>
           <nav className="cu-top-icons" aria-label="Social media">
             {socials.map((s) => {
-              const slug = s.name.toLowerCase().replace(/\s+/g, ""); // instagram, github, facebook, x
+              const slug = s.name.toLowerCase().replace(/\s+/g, "");
               return (
                 <a
                   key={s.name}
                   href={s.href}
-                  className={`cu-top-icon icon-${slug}`} 
+                  className={`cu-top-icon icon-${slug}`}
                   aria-label={s.name}
                   target="_blank"
                   rel="noopener noreferrer"
