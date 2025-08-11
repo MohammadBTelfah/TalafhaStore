@@ -1,7 +1,7 @@
 // src/App.js
 import React, { useMemo, useState, useEffect } from "react";
 import "./App.css";
-import { BrowserRouter, Route, Routes, Outlet } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Outlet, useLocation } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 
@@ -18,9 +18,21 @@ import ContactUs from "./component/contactus";
 import AboutUs from "./component/aboutus";
 import Home from "./component/Home";
 
-// (اختياري) لو عندك Home / Products
-// import Home from "./component/Home";
-// import Products from "./component/Products";
+function AppBackground({ darkMode }) {
+  const location = useLocation();
+  useEffect(() => {
+    // لا تغيّر خلفية الـbody داخل الداشبورد
+    if (location.pathname.startsWith("/dashboard")) return;
+
+    const lightGrad = "linear-gradient(135deg, #71b7e6, #9b59b6)";
+    document.body.style.background = darkMode ? "#0e1020" : lightGrad;
+    document.body.style.backgroundAttachment = "fixed";
+    document.body.style.backgroundSize = "160% 160%";
+    document.body.style.transition = "background 250ms ease";
+  }, [darkMode, location.pathname]);
+
+  return null;
+}
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -29,12 +41,8 @@ function App() {
   });
   const toggleDarkMode = () => setDarkMode((v) => !v);
 
+  // خزّن فقط قيمة الثيم العامة، بدون لمس الداشبورد
   useEffect(() => {
-    const lightGrad = "linear-gradient(135deg, #71b7e6, #9b59b6)";
-    document.body.style.background = darkMode ? "#0e1020" : lightGrad;
-    document.body.style.backgroundAttachment = "fixed";
-    document.body.style.backgroundSize = "160% 160%";
-    document.body.style.transition = "background 250ms ease";
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
   }, [darkMode]);
 
@@ -44,7 +52,7 @@ function App() {
         palette: {
           mode: darkMode ? "dark" : "light",
           primary: { main: "#71b7e6" },
-        secondary: { main: "#9b59b6" },
+          secondary: { main: "#9b59b6" },
           background: darkMode
             ? { default: "#0e1020", paper: "#121528" }
             : { default: "#f5f7fb", paper: "#ffffff" },
@@ -61,7 +69,6 @@ function App() {
     [darkMode]
   );
 
-  // Layout فيه الـ Navbar + Footer
   const LayoutWithChrome = () => (
     <>
       <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
@@ -72,31 +79,34 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId="1084671829453-fa427391f1jfk5fmr07mv57eclobfhfc.apps.googleusercontent.com">
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>
+      <BrowserRouter>
+        {/* يتحكم بخلفية الـbody للصفحات العامة فقط */}
+        <AppBackground darkMode={darkMode} />
+
+        {/* ثيم عام للموقع (غير الداشبورد) */}
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
           <Routes>
-            {/* الصفحات اللي تبي فيها Navbar + Footer */}
             <Route element={<LayoutWithChrome />}>
-              {/* غيّر العناصر حسب مكوناتك الفعلية */}
               <Route path="/" element={<Home darkMode={darkMode} />} />
               <Route path="/about" element={<AboutUs darkMode={darkMode} />} />
-              {/* products يشمل /products و /products/:id إذا ودك */}
-              {/* <Route path="/products/*" element={<Products />} /> */}
               <Route path="/contact" element={<ContactUs darkMode={darkMode} />} />
             </Route>
 
-            {/* باقي الصفحات بدون Navbar/Footer */}
+            {/* صفحات خارج اللAYOUT */}
             <Route path="/register" element={<RegistrationForm />} />
             <Route path="/login" element={<LoginForm />} />
+
+            {/* الداشبورد بثيمه الخاص (لا يتأثر بالثيم العام) */}
             <Route path="/dashboard" element={<DashboardLayoutSlots />} />
+
             <Route path="/oauth-success" element={<Success />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
           </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
+        </ThemeProvider>
+      </BrowserRouter>
     </GoogleOAuthProvider>
   );
 }
