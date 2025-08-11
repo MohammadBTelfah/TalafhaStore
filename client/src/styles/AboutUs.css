@@ -620,3 +620,57 @@
 /* اختياري: إبراز نص الخطوة النشطة */
 .au-steps li.active .content h4{ color:#fff; }
 .au-steps li.active .content p{ color:#e7ebf7; }
+/* الإحصائيات */
+.au-stats { position: relative; }            /* عشان الـsentinel يتموضع */
+
+.au-stats .stagger{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);     /* 4 أعمدة كما كان */
+  gap: 14px;
+}
+
+/* نفس الاستجابة اللي كانت على القسم */
+@media (max-width: 900px){
+  .au-stats .stagger{ grid-template-columns: repeat(2, 1fr); }
+}
+
+/* السنتمينل: يبقى كما هو */
+.io-sentinel{
+  position: absolute;
+  width: 1px; height: 1px;
+  inset: 0 auto auto 0;
+  pointer-events: none;
+  opacity: 0;
+}
+/* كان سبب التجميع لعمود واحد على بعض المتصفحات */
+.au-stats .stagger { display: contents; }
+/* ===== Reveal on scroll ===== */
+.reveal{
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .6s ease, transform .6s ease;
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.inview{
+  opacity: 1;
+  transform: none;
+}
+
+/* ستاجر لعناصر القسم (cards / stats / steps / quotes) */
+.reveal .reveal-child{
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .5s ease, transform .5s ease;
+  transition-delay: calc( var(--reveal-delay, 0ms) + var(--i, 0) * 120ms );
+}
+.reveal.inview .reveal-child{
+  opacity: 1;
+  transform: none;
+}
+
+/* اختيارية: مسافات مريحة بين الأقسام */
+.au-container > section{ margin-bottom: 20px; }
+
+/* (اختياري) Scroll Snap لو بدك كل قسم يثبت عند حافته */
+.au-page{ scroll-snap-type: y proximity; }
+.au-container > section{ scroll-snap-align: start; }

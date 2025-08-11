@@ -212,6 +212,8 @@ export default function RegistrationForm() {
                         ? 'success'
                         : ''
                     }
+                      placeholder="Enter your password"
+
                     required
                   />
                   <span onClick={() => setShowPassword(!showPassword)} className="eye-icon">
@@ -237,6 +239,7 @@ export default function RegistrationForm() {
                         ? 'success'
                         : ''
                     }
+                    placeholder='Confirm your password'
                     required
                   />
                   <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="eye-icon">
