@@ -17,7 +17,7 @@ export default function ContactUs({ darkMode }) {
     instagram: "https://www.instagram.com/M0_TF/",
     github: "https://github.com/MohammadBTelfah",
     facebook: "https://www.facebook.com/mohammed.telfah.35/",
-    x: "https://x.com/youraccount",
+    x: "https://x.com/m7mdte",
   };
 
   const socials = [

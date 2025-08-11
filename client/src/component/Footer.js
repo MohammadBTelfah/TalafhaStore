@@ -1,7 +1,9 @@
 import React from "react";
 import { Box, Container, Grid, IconButton, Typography, Tooltip } from "@mui/material";
 import { styled } from "@mui/system";
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaGithub } from "react-icons/fa";
+import { FaFacebook,  FaInstagram, FaLinkedin, FaGithub } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
+
 
 /* ====== Helpers to pass custom prop to styled ====== */
 const forward = (p) => p !== "darkMode";
@@ -59,11 +61,11 @@ const NavLink = styled(Typography, { shouldForwardProp: forward })(({ theme, dar
 /* ====== Component ====== */
 const Footer = ({ darkMode = false }) => {
   const socialLinks = [
-    { icon: <FaFacebook size={20} />, label: "Facebook", url: "#" },
-    { icon: <FaTwitter size={20} />, label: "Twitter", url: "#" },
-    { icon: <FaInstagram size={20} />, label: "Instagram", url: "#" },
-    { icon: <FaLinkedin size={20} />, label: "LinkedIn", url: "#" },
-    { icon: <FaGithub size={20} />, label: "GitHub", url: "#" },
+    { icon: <FaFacebook size={20} />, label: "Facebook", url: "https://www.facebook.com/mohammed.telfah.35/" },
+    { icon: <FaXTwitter size={20} />, label: "X", url: "https://x.com/m7mdte" },
+    { icon: <FaInstagram size={20} />, label: "Instagram", url: "https://www.instagram.com/M0_TF/" },
+    { icon: <FaLinkedin size={20} />, label: "LinkedIn", url: "https://www.linkedin.com/in/mohammed-telfah-3ba1a7261/" },
+    { icon: <FaGithub size={20} />, label: "GitHub", url: "https://github.com/MohammadBTelfah" },
   ];
 
   const navLinks = ["Home", "About Us", "Products", "Contact Us", "Profile"];
@@ -119,7 +121,7 @@ const Footer = ({ darkMode = false }) => {
           {/* Copy */}
           <Grid item>
             <Typography variant="body2" align="center" sx={{ opacity: 0.9 }}>
-              © {new Date().getFullYear()} Your Company Name. All rights reserved.
+              © {new Date().getFullYear()} Talafha. All rights reserved.
             </Typography>
           </Grid>
         </Grid>

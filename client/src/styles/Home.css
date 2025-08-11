@@ -202,3 +202,27 @@ body{
 @media (min-width: 640px){
   .card.product{ min-height: 420px; } /* عدّل الرقم حسب ذوقك */
 }
+.reveal [data-reveal]{
+  opacity: 0;
+  transform: translateY(18px) scale(.98);
+  filter: blur(6px);
+  transition:
+    opacity .6s ease,
+    transform .6s ease,
+    filter .6s ease;
+  transition-delay: var(--d, 0ms); /* بنضبطها من JSX */
+  will-change: transform, opacity, filter;
+}
+
+/* لما القسم يصير مرئي */
+.reveal.visible [data-reveal]{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* ما بدنا أي سكروول داخل العناصر */
+.section, .grid, .card{ overflow: hidden; }
+.card::-webkit-scrollbar{ display: none; }
+.card{ scrollbar-width: none; }
+
