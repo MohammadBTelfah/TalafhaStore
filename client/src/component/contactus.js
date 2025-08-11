@@ -55,7 +55,6 @@ export default function ContactUs({ darkMode }) {
       const res = await fetch(API_URL_CREATE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // credentials: "include", // لو API عندك يعتمد على جلسات/كوكيز
         body: JSON.stringify(values),
       });
 
@@ -93,7 +92,14 @@ export default function ContactUs({ darkMode }) {
             {socials.map((s) => {
               const slug = s.name.toLowerCase().replace(/\s+/g, "");
               return (
-                <a key={s.name} href={s.href} className={`cu-top-icon icon-${slug}`} aria-label={s.name} target="_blank" rel="noopener noreferrer">
+                <a
+                  key={s.name}
+                  href={s.href}
+                  className={`cu-top-icon icon-${slug} brand-${slug}`}
+                  aria-label={s.name}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {s.icon}
                 </a>
               );
@@ -106,7 +112,7 @@ export default function ContactUs({ darkMode }) {
             {socials.map((s) => {
               const slug = s.name.toLowerCase().replace(/\s+/g, "");
               return (
-                <article className="cu-card animated-border" key={s.name}>
+                <article className={`cu-card animated-border brand-${slug}`} key={s.name}>
                   <div className={`cu-card-icon icon-${slug}`} aria-hidden="true">{s.icon}</div>
                   <h3 className="cu-card-title">{s.name}</h3>
                   <p className="cu-card-desc">{s.desc}</p>

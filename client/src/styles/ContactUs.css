@@ -14,6 +14,11 @@
   --white: #fff;
   --radius: 18px;
   --outline: 2px;
+    --ig-p1:#F58529; --ig-p2:#FEDA77; --ig-p3:#DD2A7B; --ig-p4:#8134AF; --ig-p5:#515BD4;
+  --fb:#1877F2;
+  --gh:#181717;
+  --x:#000000;
+
 }
 
 /* ===== Dark (عند إضافة cu-dark على الصفحة) ===== */
@@ -102,7 +107,8 @@
   font-size:28px; margin-bottom:10px;
 }
 .cu-card-title{ margin: 6px 0 6px; font-size: 20px; }
-.cu-card-desc{ margin:0 0 12px; color: var(--muted); line-height: 1.7; }
+.cu-card-desc{ margin:0 0 12px;   color: rgba(0, 0, 0, 0.85); /* نفس الفكرة لكن شبه شفاف */
+ line-height: 1.7; }
 .cu-card-link{
   color:#fff; text-decoration:none; font-weight:700;
   border-bottom:1px dashed rgba(255,255,255,.75);
@@ -140,3 +146,20 @@
   color:#0e1020; background:#ffffff; transition:.18s ease;
 }
 .cu-btn:hover{ transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,.25); }
+.icon-instagram {
+  color:#fff;
+  background: radial-gradient(circle at 30% 107%, var(--ig-p2) 0%, var(--ig-p2) 5%, var(--ig-p1) 45%, var(--ig-p3) 60%, var(--ig-p4) 90%) !important;
+}
+.brand-instagram.cu-card:hover { border-color: var(--ig-p3); }
+
+/* GitHub */
+.icon-github { background: var(--gh) !important; color:#fff; }
+.brand-github.cu-card:hover { border-color: var(--gh); }
+
+/* Facebook */
+.icon-facebook { background: var(--fb) !important; color:#fff; }
+.brand-facebook.cu-card:hover { border-color: var(--fb); }
+
+/* X */
+.icon-x { background: var(--x) !important; color:#fff; }
+.brand-x.cu-card:hover { border-color: var(--x); }
