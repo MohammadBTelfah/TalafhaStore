@@ -5,11 +5,14 @@ const session = require('express-session');
 const passport = require('passport');
 require('./middleware/googleAuth'); // ✅ استيراد إعدادات Google OAuth
 
+
 const userRoutes = require('./Routes/userRoutes');
 const productRoutes = require('./Routes/productRoutes');
 const categoryRoutes = require('./Routes/categoryRoutes');
 const CartRoutes = require('./Routes/CartRoutes');
 const OrderRoutes = require('./Routes/orderRoutes');
+const contactRoutes = require('./Routes/ContactRoutes');
+
 
 const path = require('path');
 const cors = require('cors');
@@ -46,6 +49,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/cart', CartRoutes);
 app.use('/api/orders', OrderRoutes);
+app.use('/api/contact', contactRoutes); // 👈 add this line
+
 
 // ✅ MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
