@@ -217,6 +217,85 @@
 .au-quote .q-star{ opacity:.9; margin-right:2px; }
 .au-quote blockquote{ margin:8px 0 6px; line-height:1.8; color:#f6f7fb; }
 .au-quote figcaption{ color:#e1e4f3; opacity:.9; }
+/* ========= QUOTES — polish & motion ========= */
+
+/* بطاقة أنيقة + دخول متدرّج */
+.au-quotes .au-quote{
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);                 /* أساس زجاجي */
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transform: translateY(6px);
+  opacity: 0;
+  animation: au-cardIn 600ms ease-out forwards;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+/* تتابع الدخول */
+.au-quotes .au-quote:nth-child(1){ animation-delay: 0ms; }
+.au-quotes .au-quote:nth-child(2){ animation-delay: 120ms; }
+.au-quotes .au-quote:nth-child(3){ animation-delay: 240ms; }
+/* زيد الأسطر لو عندك بطاقات أكثر */
+
+/* خلفية جradient خفيفة ومتحركة فوق البطاقة */
+.au-quotes .au-quote::before{
+  content:"";
+  position:absolute; inset:0;
+  background: linear-gradient(135deg, #7aa0ff22, #b27be122, #7aa0ff22);
+  background-size: 200% 200%;
+  animation: au-gradShift 16s linear infinite;
+  pointer-events:none;
+}
+
+/* Hover: بوب خفيف + ظل ناعم */
+.au-quotes .au-quote:hover{
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 14px 28px rgba(0,0,0,.25);
+  border-color: rgba(255,255,255,.28);
+}
+
+/* النجوم تلمع بالتناوب */
+.au-quotes .q-star{
+  color: #fff;
+  opacity: .9;
+  margin-right: 2px;
+  animation: au-starPulse 1.8s ease-in-out infinite;
+}
+.au-quotes .q-star:nth-of-type(1){ animation-delay: 0s;   }
+.au-quotes .q-star:nth-of-type(2){ animation-delay: .15s; }
+.au-quotes .q-star:nth-of-type(3){ animation-delay: .30s; }
+.au-quotes .q-star:nth-of-type(4){ animation-delay: .45s; }
+.au-quotes .q-star:nth-of-type(5){ animation-delay: .60s; }
+
+/* نص أوضح عند الهوفر (اختياري) */
+.au-quotes .au-quote:hover blockquote{ color:#ffffff; }
+.au-quotes .au-quote:hover figcaption{ color:#f0f3fb; }
+
+/* keyframes */
+@keyframes au-cardIn{
+  from{ transform: translateY(10px); opacity: 0; }
+  to  { transform: translateY(0);    opacity: 1; }
+}
+@keyframes au-gradShift{
+  0%  { background-position: 0% 0%;   }
+  50% { background-position: 100% 100%;}
+  100%{ background-position: 0% 0%;   }
+}
+@keyframes au-starPulse{
+  0%,100% { transform: scale(1);   filter: drop-shadow(0 0 0 rgba(126,200,255,0)); }
+  50%     { transform: scale(1.18); filter: drop-shadow(0 0 8px rgba(126,200,255,.55)); }
+}
+
+/* محترمون لمن يفضّل تقليل الحركة */
+@media (prefers-reduced-motion: reduce){
+  .au-quotes .au-quote,
+  .au-quotes .au-quote::before,
+  .au-quotes .q-star{
+    animation: none !important;
+    transform: none !important;
+  }
+}
 
 /* ===========================
    OWNER
@@ -225,22 +304,96 @@
   text-align:center;
   background: var(--surface);
   border:1px solid var(--border);
-  padding:26px 18px 30px; border-radius: var(--radius);
-  display:flex; flex-direction:column; align-items:center;
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  padding:26px 18px 30px;
+  border-radius: var(--radius);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
 }
+
 .au-owner-badge{
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:4px 12px; border-radius:999px;
-  border:1px solid #fff; background: var(--chip-bg);
-  font-weight:800; font-size:.95rem; margin:0 0 12px 0;
+  position: relative;
+  z-index: 2;                         /* فوق اللمعة */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #fff;
+  background: var(--chip-bg);
+  color: #fff;
+  font-weight: 800;
+  font-size: .95rem;
+  margin: 0 0 12px 0;
+
+  /* تأكد أنها ظاهرة حتى لو الأنيميشن ما اشتغل */
+  opacity: 1 !important;
+  transform: none !important;
+  animation: au-slideDown .6s ease-out forwards;
 }
+@keyframes au-slideDown{
+  from{ transform: translateY(-12px); opacity:0; }
+  to  { transform: translateY(0);     opacity:1; }
+}
+
+
+
 .au-owner-photo{
-  width:160px; height:160px; object-fit:cover;
-  border-radius:50%; border:3px solid #fff; box-shadow:0 10px 26px #0006; margin:0 0 10px 0;
+  width:160px;
+  height:160px;
+  object-fit:cover;
+  border-radius:50%;
+  border:3px solid #fff;
+  box-shadow:0 10px 26px #0006;
+  margin:0 0 10px 0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-.au-owner-name{ margin:6px 0 6px; font-size:22px; }
-.au-owner-note{ margin:0; color:var(--muted); }
+.au-owner-photo:hover{
+  transform: translateY(0) scale(1.02);
+  box-shadow: 0 18px 32px rgba(0,0,0,.35);
+}
+
+.au-owner-name{ 
+  margin:6px 0 6px;
+  font-size:22px;
+  color: #fff; /* لون واضح */
+  opacity: 0;
+  transform: translateY(6px);
+  animation: au-fadeUp .6s ease-out .18s forwards;
+}
+
+.au-owner-note{
+  margin:0;
+  color: #cfd3e5; /* لون أوضح من muted */
+}
+/* force show owner name + keep it above the sheen */
+.au-owner { position: relative; }
+.au-owner::before{ z-index: 0; pointer-events:none; }   /* طبقة اللمعة تحت */
+
+.au-owner-name{
+  position: relative;
+  z-index: 1;                 /* فوق ::before */
+  color: #fff;
+  font-weight: 800;
+  font-size: 22px;
+  margin: 12px 0 8px;
+  display: block !important;
+
+  /* ألغِ أي أنيميشن أخفتها */
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+.au-owner-note{
+  position: relative;
+  z-index: 1;
+  color: #cfd3e5;
+}
 
 /* =========================================================
    ORDER SCENE – Truck (boxes from RIGHT)
@@ -250,7 +403,11 @@
   width: 100%;
   height: 260px;
   overflow: hidden;
+  /* ↓↓↓ متغيرات مفيدة */
+  --truck-left: 4%;   /* مكان الشاحنة من اليسار */
+  --door-x: 104px;    /* باب التحميل بالنسبة لواجهة الشاحنة (80px trailer + 24px slot) */
 }
+
 
 /* الحزام */
 .au-order-scene .au-belt{
@@ -281,7 +438,8 @@
   --size: 64px;
   position: absolute;
   bottom: 50px;
-  right: -90px;            /* كانت left:-90px */
+  left: 105%;                /* تبدأ خارج المشهد يمين */
+  right: auto;
   width: var(--size);
   height: calc(var(--size) * .75);
   border-radius: 8px;
@@ -290,7 +448,7 @@
   box-shadow: 0 10px 24px rgba(0,0,0,.35);
   display: grid; place-items: center;
   opacity: 0;
-  animation: au-moveBox-rtl var(--T, 9s) linear infinite; /* أنيميشن جديدة */
+  animation: au-boxToTruck var(--T, 9s) linear infinite;  /* اسم جديد */
   z-index: 3;
 }
 .au-order-scene .au-box .tape{
@@ -311,18 +469,27 @@
   61%  { right:20%;  opacity:0; transform: translateY(10px) scale(.92); }
   100% { right:20%;  opacity:0; }
 }
+@keyframes au-boxToTruck{
+  0%   { left:105%;  opacity:0; }
+  6%   { left:95%;   opacity:1; }
+  48%  { left:calc(var(--truck-left) + var(--door-x)); opacity:1; transform:translateY(0) scale(1); }
+  56%  { left:calc(var(--truck-left) + var(--door-x)); opacity:1; transform:translateY(-6px) scale(.98); }
+  61%  { left:calc(var(--truck-left) + var(--door-x)); opacity:0; transform:translateY(10px) scale(.92); } /* دخل جوّا */
+  100% { left:calc(var(--truck-left) + var(--door-x)); opacity:0; }
+}
+
 
 /* الشاحنة — مواجهة اليمين دائمًا (flip داخل الأنيميشن) */
 .au-order-scene .au-truck{
-  --flip: 1;                 /* خليها تواجه اليمين */
+  --flip: 1;
   position: absolute;
   bottom: 52px;
-  left: 4%;                  /* بدّلنا من right إلى left */
-  right: auto;               /* مهم عشان ما يتعارض مع left */
+  left: var(--truck-left);   /* بدل right */
+  right: auto;
   width: 300px;
   height: 110px;
   z-index: 10;
-  animation: au-truckRun var(--T, 12s) linear infinite;  /* رجّعنا الحركة */
+  animation: au-truckRun var(--T, 9s) linear infinite;
 }
 
 
@@ -407,10 +574,10 @@
 }
 .au-order-scene .au-truck .wheel.w-front{ margin-right: 46px; }
 @keyframes au-wheelSpin {
-  0%,66%  { transform: rotate(0deg); }
-  88%     { transform: rotate(520deg); }
+  0%,80%  { transform: rotate(0deg); }
   100%    { transform: rotate(520deg); }
 }
+
 
 /* ظل الشاحنة */
 .au-order-scene .au-truck .shadow{
@@ -420,13 +587,36 @@
 }
 
 /* حركة الشاحنة — تظل تواجه يمين باستخدام --flip */
-@keyframes au-truckRun{
-  0%, 66%  { transform: translateX(0) scaleX(var(--flip)); opacity: 1; }
-  70%      { transform: translateX(8px) scaleX(var(--flip)); }        /* نغَمز لقدّام شوي */
-  88%      { transform: translateX(-340px) scaleX(var(--flip)); opacity: 1; } /* لليسار */
-  100%     { transform: translateX(0) scaleX(var(--flip)); opacity: 0; }
+@keyframes au-truckRun {
+  0%, 80% { transform: translateX(0) scaleX(var(--flip)); opacity: 1; }
+  84%     { transform: translateX(-8px) scaleX(var(--flip)); } /* نغَمز بسيط */
+  96%     { transform: translateX(-340px) scaleX(var(--flip)); opacity: 1; } /* تمشي لليسار */
+  100%    { transform: translateX(0) scaleX(var(--flip)); opacity: 0; } /* ترجع للدورة */
 }
 
 
 /* إلغاء أي debug عام */
 .debug{ border:none!important; outline:none!important; box-shadow:none!important; background:none!important; }
+/* Timeline step highlight */
+.au-steps li .dot{
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #c9cdd9;              /* اللون العادي */
+  box-shadow: 0 0 0 4px #ffffff30;  /* الهالة الرمادية الحالية */
+  transition: background .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+
+.au-steps li.active .dot{
+  background: #1ea7ff;              /* أزرق */
+  box-shadow: 0 0 0 6px #1ea7ff38;  /* هالة زرقاء خفيفة */
+  animation: au-pulse 1s ease-in-out infinite;
+}
+
+@keyframes au-pulse{
+  0%   { transform: scale(1);   opacity:1; }
+  50%  { transform: scale(1.25); opacity:.75; }
+  100% { transform: scale(1);   opacity:1; }
+}
+
+/* اختياري: إبراز نص الخطوة النشطة */
+.au-steps li.active .content h4{ color:#fff; }
+.au-steps li.active .content p{ color:#e7ebf7; }
