@@ -16,6 +16,7 @@ import Navbar from "./component/Navbar";
 import Footer from "./component/Footer";
 import ContactUs from "./component/contactus";
 import AboutUs from "./component/aboutus";
+import Home from "./component/Home";
 
 // (اختياري) لو عندك Home / Products
 // import Home from "./component/Home";
@@ -78,7 +79,7 @@ function App() {
             {/* الصفحات اللي تبي فيها Navbar + Footer */}
             <Route element={<LayoutWithChrome />}>
               {/* غيّر العناصر حسب مكوناتك الفعلية */}
-              {/* <Route path="/" element={<Home />} /> */}
+              <Route path="/" element={<Home darkMode={darkMode} />} />
               <Route path="/about" element={<AboutUs darkMode={darkMode} />} />
               {/* products يشمل /products و /products/:id إذا ودك */}
               {/* <Route path="/products/*" element={<Products />} /> */}
