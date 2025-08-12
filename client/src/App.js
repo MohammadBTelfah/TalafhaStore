@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useMemo, useState, useEffect } from "react";
 import "./App.css";
 import { BrowserRouter, Route, Routes, Outlet, useLocation } from "react-router-dom";
@@ -21,7 +20,6 @@ import Home from "./component/Home";
 function AppBackground({ darkMode }) {
   const location = useLocation();
   useEffect(() => {
-    // لا تغيّر خلفية الـbody داخل الداشبورد
     if (location.pathname.startsWith("/dashboard")) return;
 
     const lightGrad = "linear-gradient(135deg, #71b7e6, #9b59b6)";
@@ -41,7 +39,6 @@ function App() {
   });
   const toggleDarkMode = () => setDarkMode((v) => !v);
 
-  // خزّن فقط قيمة الثيم العامة، بدون لمس الداشبورد
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
   }, [darkMode]);
@@ -80,10 +77,8 @@ function App() {
   return (
     <GoogleOAuthProvider clientId="1084671829453-fa427391f1jfk5fmr07mv57eclobfhfc.apps.googleusercontent.com">
       <BrowserRouter>
-        {/* يتحكم بخلفية الـbody للصفحات العامة فقط */}
         <AppBackground darkMode={darkMode} />
 
-        {/* ثيم عام للموقع (غير الداشبورد) */}
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <Routes>
@@ -93,11 +88,9 @@ function App() {
               <Route path="/contact" element={<ContactUs darkMode={darkMode} />} />
             </Route>
 
-            {/* صفحات خارج اللAYOUT */}
             <Route path="/register" element={<RegistrationForm />} />
             <Route path="/login" element={<LoginForm />} />
 
-            {/* الداشبورد بثيمه الخاص (لا يتأثر بالثيم العام) */}
             <Route path="/dashboard" element={<DashboardLayoutSlots />} />
 
             <Route path="/oauth-success" element={<Success />} />
