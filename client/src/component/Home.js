@@ -147,7 +147,9 @@ function FeaturedProducts() {
 
       {err && <div className="error" data-reveal style={dstyle(2)}>{err}</div>}
       {!loading && items.length === 0 && (
-        <p style={{ color: "#fff" }} data-reveal style={dstyle(3)}>No featured products yet.</p>
+<p style={{ ...dstyle(3), color: "#fff" }} data-reveal>
+  No featured products yet.
+</p>
       )}
 
       <div className="grid products">
@@ -253,6 +255,7 @@ function Categories() {
           const name = loading ? "" : c?.name || "Category";
           const img = loading ? "" : imgFor(name);
           return (
+            // eslint-disable-next-line jsx-a11y/anchor-is-valid
             <a
               className="card category"
               data-reveal
