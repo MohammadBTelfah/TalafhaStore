@@ -400,7 +400,7 @@ function RecentlyViewed() {
     try {
       const raw = localStorage.getItem("recentProducts") || "[]";
       setItems(JSON.parse(raw));
-    } catch { /* ignore */ }
+    } catch {  }
   }, []);
 
   if (items.length === 0) return null;
