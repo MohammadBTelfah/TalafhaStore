@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../styles/Home.css";
 import axios from "axios";
-
 /* -------------------- Reveal-on-scroll hook -------------------- */
 function useReveal(options = { threshold: 0.15 }) {
   const ref = useRef(null);
@@ -21,11 +20,8 @@ function useReveal(options = { threshold: 0.15 }) {
   }, [options]);
   return ref;
 }
-
-// مساعد بسيط لضبط تأخير كل عنصر
 const dstyle = (i, step = 90) => ({ "--d": `${i * step}ms` });
-
-/* --------------------------- Hero ------------------------------ */
+/* -------------------------- Hero ------------------------------ */
 const slides = [
   {
     title: "Pro Accessories",
@@ -48,7 +44,6 @@ const slides = [
     img: "https://www.shutterstock.com/image-photo/book-open-pages-close-up-600nw-2562942291.jpg"
   }
 ];
-
 function Hero() {
   const [index, setIndex] = useState(0);
   const timer = useRef(null);
@@ -58,9 +53,7 @@ function Hero() {
     timer.current = setInterval(() => setIndex((i) => (i + 1) % slides.length), 3500);
     return () => clearInterval(timer.current);
   }, []);
-
   const current = slides[index];
-
   return (
     <section className="hero reveal" ref={ref}>
       <div className="hero-bg">
@@ -68,7 +61,6 @@ function Hero() {
           <img key={s.img} src={s.img} alt={s.title} className={`hero-img ${i === index ? "active" : ""}`} />
         ))}
       </div>
-
       <div className="hero-content">
         <h1 className="brand" data-reveal style={dstyle(0)}>Talafha</h1>
         <p className="subtitle" data-reveal style={dstyle(1)}>{current.subtitle}</p>
@@ -83,7 +75,6 @@ function Hero() {
     </section>
   );
 }
-
 /* ------------------------- Tagline ----------------------------- */
 function Tagline() {
   const ref = useReveal();
@@ -95,17 +86,14 @@ function Tagline() {
     </section>
   );
 }
-
 /* --------------------- Featured Products ----------------------- */
 const currency = (n) =>
   new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n ?? 0);
 
-// يبني رابط الصورة الصحيح من اسم الملف القادم من الـ API
 function getImageUrl(fileName) {
   if (!fileName) return "https://via.placeholder.com/400x300?text=No+Image";
   return `http://127.0.0.1:5002/uploads/${fileName.replace(/^\/+/, "")}`;
 }
-
 function FeaturedProducts() {
   const ref = useReveal();
   const [items, setItems] = useState([]);
@@ -151,7 +139,6 @@ function FeaturedProducts() {
   No featured products yet.
 </p>
       )}
-
       <div className="grid products">
         {loading
           ? Array.from({ length: 6 }).map((_, i) => (
@@ -194,7 +181,6 @@ function FeaturedProducts() {
     </section>
   );
 }
-
 /* -------------------------- Categories ------------------------- */
 const IMG_MAP = {
   laptop:
