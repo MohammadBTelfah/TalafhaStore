@@ -60,10 +60,7 @@ function Counter({ end = 0, duration = 1200, decimals = 0, suffix = "", start = 
 }
 
 export default function AboutUs({ darkMode = false }) {
-  const STORE = "Talafha Store";
-  const OWNER = "Mohammed Telfah";
-  const ownerPhoto = "https://scontent.famm6-1.fna.fbcdn.net/v/t39.30808-6/434036733_2426139024244661_1131875076272113628_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFipHkc6V8_1NJ-XVb2jxE8UxSyh2xmLd9TFLKHbGYt35h1C_X3elqXrJpOiqtWsuwFhXDb8m284vRk7e9AkgHt&_nc_ohc=ssu8WN06w4kQ7kNvwGNB82C&_nc_oc=AdncgcCzaPp2nZqoW8mF8tfsWikOLI8fFvmJxkw_hbU27wXD_NOR8EgxDrE5nbymgxy0pPB2ifrviMJlRR2Xe4t2&_nc_zt=23&_nc_ht=scontent.famm6-1.fna&_nc_gid=xDe9kdMzuMN5kT225HXpkQ&oh=00_AfURDWo85-MDpVKBE0Y6UvI3odRLXIwZoSxlQgf2Pupv5Q&oe=689EE84C";
-
+  const ownerPhoto = "https://scontent.famm10-1.fna.fbcdn.net/v/t39.30808-6/482344460_2682443528614208_3745235885468521733_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=a5f93a&_nc_eui2=AeG1o3fkCH2xI7jWiUqpr_0R6d3Z0H1uuZnp3dnQfW65mQ9itTJfTE5t1_OvsVoCD0iwTt6zT8JbHkCzwE4SKesH&_nc_ohc=7qYf46grkDgQ7kNvwHzZxCk&_nc_oc=Adk1R63XHlC2gPseVUosAOxNNE8rRW3JYIqJzFj19h4xO94XfTQJEA3c1dvuGhNfji9iABKmzUdLHuftq08FvgiS&_nc_zt=23&_nc_ht=scontent.famm10-1.fna&_nc_gid=fgpNpO81r_ogxNJI25oENg&oh=00_AfX8VY1B8CB0JnMMzagmGtMblWgyuQVKmoIJZ-V1wgDMSA&oe=68A64E2E"
   const values = [
     { icon: <FaShieldHalved/>, title: "Secure Payments",  desc: "Encrypted checkout and buyer protection on every order." },
     { icon: <FaTruckFast/>,    title: "Fast Shipping",    desc: "Partner couriers with live tracking from cart to door." },
