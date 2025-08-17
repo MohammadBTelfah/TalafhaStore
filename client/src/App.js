@@ -16,6 +16,7 @@ import Footer from "./component/Footer";
 import ContactUs from "./component/contactus";
 import AboutUs from "./component/aboutus";
 import Home from "./component/Home";
+import ProfilePage from "./component/ProfilePage";
 
 function AppBackground({ darkMode }) {
   const location = useLocation();
@@ -86,6 +87,8 @@ function App() {
               <Route path="/" element={<Home darkMode={darkMode} />} />
               <Route path="/about" element={<AboutUs darkMode={darkMode} />} />
               <Route path="/contact" element={<ContactUs darkMode={darkMode} />} />
+              <Route path="/profile" element={<ProfilePage darkMode={darkMode} />} /> 
+
             </Route>
 
             <Route path="/register" element={<RegistrationForm />} />

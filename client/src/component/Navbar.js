@@ -54,9 +54,17 @@ const QuantityButton = styled(IconButton)({
   padding: 4
 });
 
+// ----- helpers -----
+const cleanToken = (raw) => {
+  if (!raw) return "";
+  return raw.startsWith("Bearer ") ? raw.slice(7) : raw;
+};
+
 export default function Navbar({ darkMode, toggleDarkMode }) {
   const [anchorElUser, setAnchorElUser] = useState(null);
   const [user, setUser] = useState(null);
+
+  const [token, setToken] = useState(() => cleanToken(localStorage.getItem("token")));
   const [cartCount, setCartCount] = useState(0);
   const [cartItems, setCartItems] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -87,17 +95,27 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
   const openUserMenu  = (e) => setAnchorElUser(e.currentTarget);
   const closeUserMenu = () => setAnchorElUser(null);
 
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const resetAuthState = () => {
+    setUser(null);
+    setCartItems([]);
+    setCartCount(0);
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
+    setToken("");
+    resetAuthState();
     navigate("/");
-    window.location.reload();
   };
 
   const fetchCart = async () => {
+    if (!token) { setCartItems([]); setCartCount(0); return; }
     try {
       const res = await axios.get("http://127.0.0.1:5002/api/cart/get-cart", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: authHeader,
       });
       const items = res.data?.items || [];
       setCartItems(items);
@@ -108,20 +126,22 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
   };
 
   const changeQty = async (productId, change) => {
+    if (!token) return;
     try {
       await axios.post(
         "http://127.0.0.1:5002/api/cart/add-to-cart",
         { productId, quantity: change },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        { headers: authHeader }
       );
       fetchCart();
     } catch {}
   };
 
   const removeItem = async (item) => {
+    if (!token) return;
     try {
       await axios.delete("http://127.0.0.1:5002/api/cart/remove-from-cart", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: authHeader,
         data: { productId: item.product._id },
       });
       fetchCart();
@@ -134,9 +154,10 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
   );
 
   const placeOrder = async () => {
+    if (!token) return;
     try {
       await axios.post("http://127.0.0.1:5002/api/orders/place-order", {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: authHeader,
       });
       setCartItems([]); setCartCount(0);
       setSnackbarKey(k => k + 1); setSuccessOpen(true);
@@ -145,16 +166,38 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
     }
   };
 
+  // (1) اسحب البروفايل كل ما تغيّر التوكن
   useEffect(() => {
-    (async () => {
+    const run = async () => {
+      if (!token) { resetAuthState(); return; }
       try {
         const res = await axios.get("http://127.0.0.1:5002/api/users/profile", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: authHeader,
+          // لو بتستخدم كوكيز:
+          // withCredentials: true,
         });
         setUser(res.data);
         fetchCart();
-      } catch { setUser(null); }
-    })();
+      } catch {
+        resetAuthState();
+      }
+    };
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  // (2) التقط تغيّر التوكن عند التنقل داخل SPA (مثل /google-success ثم /)
+  useEffect(() => {
+    setToken(cleanToken(localStorage.getItem("token")));
+  }, [location.key]);
+
+  // (3) التقط تغيّر التوكن من تبويبات أخرى
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "token") setToken(cleanToken(e.newValue));
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   const initials = (user?.fullName || "Guest User")
@@ -254,7 +297,7 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
                     alt={user?.fullName || "Guest"}
                     src={
                       user?.profileImage
-                        ? `http://127.0.0.1:5002/uploads/${user.profileImage.replace(/\\/g,"/")}`
+                        ? `http://127.0.0.1:5002/uploads/${String(user.profileImage).replace(/\\/g,"/")}`
                         : undefined
                     }
                     sx={{
