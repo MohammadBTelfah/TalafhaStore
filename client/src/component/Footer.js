@@ -4,21 +4,18 @@ import { styled } from "@mui/system";
 import { FaFacebook, FaInstagram, FaLinkedin, FaGithub } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 
-/* ====== Helpers to pass custom prop to styled ====== */
 const forward = (p) => p !== "darkMode";
 
-/* ====== Container ====== */
 const FooterContainer = styled(Box, { shouldForwardProp: forward })(({ theme, darkMode }) => ({
   background: darkMode
-    ? "#0B0D19" // Dark: أسود صافي
-    : "linear-gradient(135deg, #71b7e6, #9b59b6)", // Light: التدرّج
+    ? "#0B0D19"  
+    : "linear-gradient(135deg, #71b7e6, #9b59b6)", 
   padding: theme.spacing(4, 0),
   color: "#fff",
   boxShadow: darkMode ? "none" : "0px -4px 10px rgba(0, 0, 0, 0.1)",
   borderTop: darkMode ? "1px solid rgba(255,255,255,.08)" : "none",
 }));
 
-/* ====== Social icon ====== */
 const SocialIcon = styled(IconButton, { shouldForwardProp: forward })(({ theme, darkMode }) => ({
   color: "#fff",
   margin: theme.spacing(0, 1),
@@ -35,7 +32,6 @@ const SocialIcon = styled(IconButton, { shouldForwardProp: forward })(({ theme, 
   },
 }));
 
-/* ====== Nav link ====== */
 const NavLink = styled(Typography, { shouldForwardProp: forward })(({ theme }) => ({
   cursor: "pointer",
   padding: theme.spacing(1, 2),
@@ -57,7 +53,6 @@ const NavLink = styled(Typography, { shouldForwardProp: forward })(({ theme }) =
   "&:hover:after": { width: "80%", left: "10%" },
 }));
 
-/* ====== Component ====== */
 const Footer = ({ darkMode = false }) => {
   const socialLinks = [
     { icon: <FaFacebook size={20} />, label: "Facebook", url: "https://www.facebook.com/mohammed.telfah.35/" },
@@ -67,24 +62,21 @@ const Footer = ({ darkMode = false }) => {
     { icon: <FaGithub size={20} />, label: "GitHub", url: "https://github.com/MohammadBTelfah" },
   ];
 
-  // روابط أقسام نفس الصفحة (Scroll داخلي)
   const navLinks = [
     { label: "Home", href: "/" },
-    { label: "About Us", href: "/about" }, // حسب طلبك aboutus
+    { label: "About Us", href: "/about" }, 
     { label: "Products", href: "/products" },
     { label: "Contact Us", href: "/contact" },
     { label: "Profile", href: "/profile" },
   ];
 
-  // سكرول سلس عند الضغط على الروابط
   const handleSmoothScroll = (e, href) => {
-    if (!href?.startsWith("#")) return; // لو رابط خارجي، خلّيه طبيعي
+    if (!href?.startsWith("#")) return;
     e.preventDefault();
     const id = href.slice(1);
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
-      // لو بدك تغيّر الـ hash في URL بدون ما تقفّز الصفحة:
       window.history.pushState({}, "", href);
     }
   };
@@ -93,7 +85,6 @@ const Footer = ({ darkMode = false }) => {
     <FooterContainer component="footer" darkMode={darkMode}>
       <Container maxWidth="lg">
         <Grid container spacing={4} direction="column" alignItems="center">
-          {/* Social */}
           <Grid item>
             <Box display="flex" flexWrap="wrap" justifyContent="center" gap={1.5}>
               {socialLinks.map((s, i) => (
@@ -113,7 +104,6 @@ const Footer = ({ darkMode = false }) => {
             </Box>
           </Grid>
 
-          {/* Nav */}
           <Grid item>
             <Box
               display="flex"
@@ -137,7 +127,6 @@ const Footer = ({ darkMode = false }) => {
             </Box>
           </Grid>
 
-          {/* Copy */}
           <Grid item>
             <Typography variant="body2" align="center" sx={{ opacity: 0.9 }}>
               © {new Date().getFullYear()} Talafha. All rights reserved.

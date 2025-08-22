@@ -1,4 +1,3 @@
-// src/pages/aboutus.js
 import React, { useEffect, useRef, useState } from "react";
 import "../styles/AboutUs.css";
 import OrderLoop from "../component/OrderLoop";
@@ -13,7 +12,6 @@ import {
   FaUsers,
 } from "react-icons/fa6";
 
-/* ========== Reveal (ظهور عند التمرير) ========== */
 function Reveal({ children, delay = 0, className = "", as: Tag = "section" }) {
   const ref = useRef(null);
   const [inview, setInview] = useState(false);
@@ -45,7 +43,6 @@ function Reveal({ children, delay = 0, className = "", as: Tag = "section" }) {
   );
 }
 
-/* ========== Counter (يبدأ العد عندما start=true) ========== */
 function Counter({
   end = 0,
   duration = 1500,
@@ -81,8 +78,6 @@ function Counter({
     </>
   );
 }
-
-/* ===================== AboutUs ===================== */
 export default function AboutUs({ darkMode = false }) {
   const values = [
     {
@@ -107,7 +102,6 @@ export default function AboutUs({ darkMode = false }) {
     },
   ];
 
-  // قيّم الإحصائيات + سرعة كل عدّاد
   const stats = [
     { icon: <FaBoxesStacked />, end: 12, suffix: "K+", label: "Products", decimals: 0, duration: 1600 },
     { icon: <FaUsers />, end: 28, suffix: "K+", label: "Happy Customers", decimals: 0, duration: 1800 },
@@ -122,7 +116,6 @@ export default function AboutUs({ darkMode = false }) {
     { t: "We improve", d: "We ship changes weekly based on your feedback." },
   ];
 
-  // ===== مراقبة ظهور قسم الإحصائيات =====
   const statsRef = useRef(null);
   const [startCount, setStartCount] = useState(false);
 
@@ -132,13 +125,13 @@ export default function AboutUs({ darkMode = false }) {
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setStartCount(true);   // ابدأ العد أول ما يظهر
-          io.disconnect();       // فقط مرة واحدة
+          setStartCount(true);      
+          io.disconnect();     
         }
       },
       {
-        threshold: 0.15,        // لما 15% يظهر
-        rootMargin: "0px 0px -35% 0px", // يبدأ بدري شوي
+        threshold: 0.15,        
+        rootMargin: "0px 0px -35% 0px", 
       }
     );
     io.observe(el);
@@ -183,7 +176,6 @@ export default function AboutUs({ darkMode = false }) {
           </div>
         </Reveal>
 
-        {/* VALUES */}
         <Reveal as="section" className="au-values" delay={80}>
           {values.map((v, i) => (
             <article
@@ -199,7 +191,6 @@ export default function AboutUs({ darkMode = false }) {
         </Reveal>
 
 <Reveal as="section" className="au-stats animated-border" delay={120}>
-  {/* 👇 سنتمينل 1x1 يُراقَب للدخول */}
   <span ref={statsRef} className="io-sentinel" />
 
   <div className="stagger">
@@ -212,7 +203,7 @@ export default function AboutUs({ darkMode = false }) {
             decimals={s.decimals}
             suffix={s.suffix}
             duration={s.duration}
-            start={startCount}   // ← يبدأ العد فقط لما الـ sentinel يظهر
+            start={startCount}  
           />
         </div>
         <div className="au-stat-lbl">{s.label}</div>
@@ -221,8 +212,6 @@ export default function AboutUs({ darkMode = false }) {
   </div>
 </Reveal>
 
-
-        {/* STEPS */}
         <Reveal as="section" className="au-steps animated-border" delay={120}>
           <h2>How We Work</h2>
           <ol>

@@ -1,4 +1,3 @@
-// src/component/Navbar.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import {
   AppBar, Box, Toolbar, IconButton, Typography, Menu, Avatar,
@@ -16,7 +15,6 @@ import axios from "axios";
 
 const GRAD = "linear-gradient(135deg, #71b7e6, #9b59b6)";
 
-/* شعار متدرّج */
 const Brand = styled(Typography)({
   fontWeight: 900,
   cursor: "pointer",
@@ -28,7 +26,6 @@ const Brand = styled(Typography)({
   userSelect: "none",
 });
 
-/* زر رابط مع underline متدرّج */
 const NavBtn = styled(Button)({
   position: "relative",
   fontWeight: 700,
@@ -47,14 +44,12 @@ const NavBtn = styled(Button)({
   "&.active::after": { transform: "scaleX(1)" },
 });
 
-/* زر كميات في السلة */
 const QuantityButton = styled(IconButton)({
   border: "1px solid #e0e0e0",
   borderRadius: 6,
   padding: 4
 });
 
-// ----- helpers -----
 const cleanToken = (raw) => {
   if (!raw) return "";
   return raw.startsWith("Bearer ") ? raw.slice(7) : raw;
@@ -84,7 +79,6 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
     { name: "Contact Us",path: "/contact",  icon: <FiPhone /> },
   ]), []);
 
-  // ألوان وخلفيات
   const isDark = !!darkMode;
   const appbarBg     = isDark ? "rgba(13,16,32,0.80)" : "rgba(255,255,255,0.75)";
   const appbarBorder = isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.10)";
@@ -129,20 +123,17 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
  const changeQty = async (productId, change) => {
   if (!token) return;
 
-  // الكمية الحالية من الـ state
   const current = cartItems.find(it => it.product._id === productId)?.quantity || 0;
   const nextQty = current + change;
 
   try {
     if (change > 0) {
-      // زيادة 1
       await axios.post(
         "http://127.0.0.1:5002/api/cart/add-to-cart",
         { productId, quantity: 1 },
         { headers: authHeader }
       );
 
-      // تحديث محلي فوري
       setCartItems(prev =>
         prev.map(it =>
           it.product._id === productId ? { ...it, quantity: it.quantity + 1 } : it
@@ -151,19 +142,15 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
       setCartCount(c => c + 1);
 
     } else {
-      // تنقيص
       if (nextQty <= 0) {
-        // احذف العنصر نهائياً
         await axios.delete("http://127.0.0.1:5002/api/cart/remove-from-cart", {
           headers: authHeader,
           data: { productId },
         });
 
-        // تحديث محلي
         setCartItems(prev => prev.filter(it => it.product._id !== productId));
-        setCartCount(c => Math.max(0, c - current)); // نقصنا كل الكمية
+        setCartCount(c => Math.max(0, c - current));
       } else {
-        // ما في endpoint لتعديل مباشر → نحذف ثم نضيف بالكمية الجديدة
         await axios.delete("http://127.0.0.1:5002/api/cart/remove-from-cart", {
           headers: authHeader,
           data: { productId },
@@ -175,7 +162,6 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
           { headers: authHeader }
         );
 
-        // تحديث محلي
         setCartItems(prev =>
           prev.map(it =>
             it.product._id === productId ? { ...it, quantity: nextQty } : it
@@ -186,7 +172,6 @@ setCartCount(c => c + change);
     }
   } catch (e) {
     console.error(e?.response?.data || e);
-    // fallback للتزامن مع السيرفر إذا صار أي تعارض
     fetchCart();
   }
 };
@@ -208,7 +193,6 @@ setCartCount(c => c + change);
     fetchCart();
   }
 };
-// احسب الإجمالي
 const total = useMemo(() => {
   if (!Array.isArray(cartItems)) return 0;
   return cartItems.reduce((sum, it) => {
@@ -221,9 +205,7 @@ useEffect(() => {
   const onCartDelta = (e) => {
     const delta = Number(e?.detail?.delta || 0);
     if (!delta) return;
-    // حدّث العداد فوراً
     setCartCount((c) => Math.max(0, c + delta));
-    // وإذا السلة مفتوحة، رجّع آخر حالة من السيرفر
     if (cartOpen) fetchCart();
   };
   window.addEventListener("cart:delta", onCartDelta);
@@ -244,15 +226,12 @@ useEffect(() => {
     }
   };
 
-  // (1) اسحب البروفايل كل ما تغيّر التوكن
   useEffect(() => {
     const run = async () => {
       if (!token) { resetAuthState(); return; }
       try {
         const res = await axios.get("http://127.0.0.1:5002/api/users/profile", {
           headers: authHeader,
-          // لو بتستخدم كوكيز:
-          // withCredentials: true,
         });
         setUser(res.data);
         fetchCart();
@@ -261,15 +240,12 @@ useEffect(() => {
       }
     };
     run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  // (2) التقط تغيّر التوكن عند التنقل داخل SPA (مثل /google-success ثم /)
   useEffect(() => {
     setToken(cleanToken(localStorage.getItem("token")));
   }, [location.key]);
 
-  // (3) التقط تغيّر التوكن من تبويبات أخرى
   useEffect(() => {
     const onStorage = (e) => {
       if (e.key === "token") setToken(cleanToken(e.newValue));
@@ -306,13 +282,12 @@ useEffect(() => {
               mx: "auto",
               width: "100%",
               display: "grid",
-              gridTemplateColumns: "1fr auto 1fr", // يسار | وسط | يمين
+              gridTemplateColumns: "1fr auto 1fr", 
               alignItems: "center",
               gap: 1,
               color: textColor,
             }}
           >
-            {/* يسار: Brand + Burger */}
             <Box sx={{ display:"flex", alignItems:"center", gap:1, justifySelf:"start" }}>
               {isMobile && (
                 <IconButton aria-label="menu" onClick={() => setNavOpen(true)} sx={{ color: textColor }}>
@@ -322,7 +297,6 @@ useEffect(() => {
               <Brand variant="h6" onClick={() => navigate("/")}>Talafha</Brand>
             </Box>
 
-            {/* وسط: روابط الديسكتوب */}
             {!isMobile && (
               <Box sx={{ display:"flex", gap:1.5, justifyContent:"center", justifySelf:"center" }}>
                 {pages.map(p => {
@@ -345,7 +319,6 @@ useEffect(() => {
               </Box>
             )}
 
-            {/* يمين: theme + cart + profile */}
             <Box sx={{ display:"flex", alignItems:"center", gap:1, justifySelf:"end" }}>
               <IconButton
                 aria-label="toggle theme"
@@ -428,7 +401,6 @@ useEffect(() => {
         </Toolbar>
       </AppBar>
 
-      {/* Mobile Nav Drawer */}
       <Drawer anchor="left" open={navOpen} onClose={()=>setNavOpen(false)}>
         <Box sx={{
           width:260, p:1.5,
@@ -464,7 +436,6 @@ useEffect(() => {
         </Box>
       </Drawer>
 
-      {/* Cart Drawer */}
       <Drawer anchor="right" open={cartOpen} onClose={() => setCartOpen(false)}>
         <Box sx={{
           width: 360, bgcolor: appbarBg, color: textColor, height:"100%",

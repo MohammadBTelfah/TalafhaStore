@@ -457,8 +457,8 @@
   height: 260px;
   overflow: hidden;
   /* ↓↓↓ متغيرات مفيدة */
-  --truck-left: 4%;   /* مكان الشاحنة من اليسار */
-  --door-x: 104px;    /* باب التحميل بالنسبة لواجهة الشاحنة (80px trailer + 24px slot) */
+  --truck-left: 6%;   /* مكان الشاحنة من اليسار */
+  --door-x: 118px;    /* باب التحميل بالنسبة لواجهة الشاحنة (80px trailer + 24px slot) */
 }
 
 
@@ -501,7 +501,7 @@
   box-shadow: 0 10px 24px rgba(0,0,0,.35);
   display: grid; place-items: center;
   opacity: 0;
-  animation: au-boxToTruck var(--T, 9s) linear infinite;  /* اسم جديد */
+  animation: au-boxToTruck var(--T, 9s) linear infinite;
   z-index: 3;
 }
 .au-order-scene .au-box .tape{
@@ -527,18 +527,17 @@
   6%   { left:95%;   opacity:1; }
   48%  { left:calc(var(--truck-left) + var(--door-x)); opacity:1; transform:translateY(0) scale(1); }
   56%  { left:calc(var(--truck-left) + var(--door-x)); opacity:1; transform:translateY(-6px) scale(.98); }
-  61%  { left:calc(var(--truck-left) + var(--door-x)); opacity:0; transform:translateY(10px) scale(.92); } /* دخل جوّا */
+  61%  { left:calc(var(--truck-left) + var(--door-x)); opacity:0; transform:translateY(10px) scale(.92); } /* دخلت جوّا */
   100% { left:calc(var(--truck-left) + var(--door-x)); opacity:0; }
 }
 
 
 /* الشاحنة — مواجهة اليمين دائمًا (flip داخل الأنيميشن) */
 .au-order-scene .au-truck{
-  --flip: 1;
+  --flip: 1;                    /* تبقى مواجهة لليمين */
   position: absolute;
   bottom: 52px;
-  left: var(--truck-left);   /* بدل right */
-  right: auto;
+  left: var(--truck-left) !important;
   width: 300px;
   height: 110px;
   z-index: 10;

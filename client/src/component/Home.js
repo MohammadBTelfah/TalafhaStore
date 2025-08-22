@@ -601,7 +601,6 @@ function FAQ() {
 
 /* --------------------------- Home ------------------------------ */
 export default function Home({ darkMode }) {
-  const navigate = useNavigate();   
   const theme = darkMode ? "dark" : "light";
   return (
     <div className="talafha-home" data-theme={theme}>

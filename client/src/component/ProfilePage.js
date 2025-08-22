@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import "../styles/ProfilePage.css";
 
-// يحوّل أي مسار نسبي للصورة لمسار مطلق + يصلّح backslashes
 function toAbsoluteUrl(u) {
   if (!u) return "";
   let s = String(u).trim();
@@ -15,7 +14,6 @@ function toAbsoluteUrl(u) {
   return `http://127.0.0.1:5002/${s}`;
 }
 
-// عنصر حقل مع زر قلم (قفل/فتح التعديل)
 function Field({
   label, name, type = "text",
   value, onChange,
@@ -76,12 +74,10 @@ export default function ProfilePage({ darkMode = false }) {
     username: false, email: false, fullName: false, phone: false
   });
 
-  // الصورة
   const [imageFile, setImageFile]   = useState(null);
   const [imagePreview, setPreview]  = useState("");
   const fileRef = useRef(null);
 
-  // مودال كلمة المرور
   const [pwOpen, setPwOpen] = useState(false);
   const [pwForm, setPwForm] = useState({
     currentPassword: "", newPassword: "", confirmPassword: ""
@@ -90,7 +86,6 @@ export default function ProfilePage({ darkMode = false }) {
     current: false, next: false, confirm: false
   });
 
-  // تحميل البروفايل
   useEffect(() => {
     setLoading(true);
     setError("");
@@ -116,7 +111,6 @@ export default function ProfilePage({ darkMode = false }) {
     .finally(() => setLoading(false));
   }, []);
 
-  // تغيـير الصورة
   const onAvatarClick = () => fileRef.current?.click();
   const onFileChange  = (e) => {
     const f = e.target.files?.[0];
@@ -131,7 +125,6 @@ export default function ProfilePage({ darkMode = false }) {
     setProfile((p) => ({ ...p, [name]: value }));
   };
 
-  // حفظ التعديلات
   const saveAll = async () => {
     setSaving(true);
     setError(""); setSuccess("");
@@ -176,7 +169,6 @@ export default function ProfilePage({ darkMode = false }) {
     }
   };
 
-  // تغيير كلمة المرور
   const submitPw = async (e) => {
     e.preventDefault();
     if (pwForm.newPassword.length < 8) return setError("New password must be at least 8 characters.");
@@ -200,7 +192,6 @@ export default function ProfilePage({ darkMode = false }) {
     }
   };
 
-  // كلاس الصفحة: au-page + au-dark لو darkMode=true
   const pageClass = `au-page${darkMode ? " au-dark" : ""}`;
 
   return (
@@ -225,7 +216,6 @@ export default function ProfilePage({ darkMode = false }) {
           <div className="loader">Loading...</div>
         ) : (
           <div className="au-grid">
-            {/* يسار: الصورة + التحقق */}
             <section className="card left">
               <div className="chips">
                 <span className="chip">
@@ -257,7 +247,6 @@ export default function ProfilePage({ darkMode = false }) {
               </div>
             </section>
 
-            {/* يمين: الحقول */}
             <section className="card right">
               <div className="fields">
                 <Field
@@ -300,7 +289,6 @@ export default function ProfilePage({ darkMode = false }) {
         )}
       </div>
 
-      {/* MODAL: Password */}
       {pwOpen && (
         <div className="modal-backdrop" onClick={() => setPwOpen(false)}>
           <div className="modal card" onClick={(e) => e.stopPropagation()}>

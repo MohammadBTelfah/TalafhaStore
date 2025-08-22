@@ -22,7 +22,7 @@ export default function ContactUs({ darkMode }) {
   const socials = [
     { name: "Instagram", icon: <FaInstagram />, href: SOCIAL_LINKS.instagram, desc: "Follow our latest photos and stories" },
     { name: "GitHub", icon: <FaGithub />, href: SOCIAL_LINKS.github, desc: "Explore projects and repositories" },
-    { name: "Facebook", icon: <FaFacebook />, href: SOCIAL_LINKS.facebook, desc: "Join our community and share your thoughts" },
+    { name: "Facebook", icon: <FaFacebook />,  href: SOCIAL_LINKS.facebook, desc: "Join our community and share your thoughts" },
     { name: "X", icon: <FaXTwitter />, href: SOCIAL_LINKS.x, desc: "Tweet with us and follow quick updates" },
   ];
 

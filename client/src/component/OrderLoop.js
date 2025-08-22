@@ -1,11 +1,10 @@
-// src/component/OrderLoop.jsx
 import React from "react";
 import "../styles/AboutUs.css";
 
 export default function OrderLoop({
   duration = "9s",
   debug = true,
-  boxesFrom = "right" // "right" | "left"
+  boxesFrom = "right" 
 }) {
   return (
     <div

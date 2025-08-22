@@ -188,7 +188,6 @@ export default function RegistrationForm() {
                     }
                     required
                   />
-                  {/* Username message */}
                   {field === 'username' && usernameAvailable === true && (
                     <p style={{ color: '#2ecc71', fontSize: '13px', marginTop: '4px' }}>✓ Username is available.</p>
                   )}
@@ -196,7 +195,6 @@ export default function RegistrationForm() {
                 </div>
               ))}
 
-              {/* Password */}
               <div className="input-box password-box">
                 <span className="details">Password</span>
                 <div className="password-input-wrapper">
