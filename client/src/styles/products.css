@@ -1,0 +1,300 @@
+/* ===========================
+   THEME TOKENS
+=========================== */
+:root{
+  --bg-grad: linear-gradient(135deg, #71b7e6, #9b59b6);
+  --text: #ffffff;
+  --muted: #dfe2f1;
+  --surface: rgba(255,255,255,0.06);
+  --surface-strong: rgba(255,255,255,0.10);
+  --chip-bg: rgba(255,255,255,0.12);
+  --chip-border: rgba(255,255,255,0.28);
+  --border: rgba(255,255,255,0.22);
+  --ring: rgba(255,255,255,0.12);
+  --white: #ffffff;
+  --radius: 20px;
+  --outline: 2px;
+  --container-max: 1500px;
+
+  --cta: #22c55e;
+  --cta-hover: #1fb455;
+
+  --stock-in: #16a34a;
+  --stock-low: #f59e0b;
+  --stock-out: #ef4444;
+}
+
+.au-page.au-dark{
+  --bg-grad: #0B0D19;
+  --text: #f5f5f5;
+  --muted: #b7bccf;
+  --surface: rgba(255,255,255,0.06);
+  --surface-strong: rgba(255,255,255,0.12);
+  --chip-bg: rgba(255,255,255,0.10);
+  --chip-border: rgba(255,255,255,0.22);
+  --border: rgba(255,255,255,0.18);
+  --ring: rgba(255,255,255,0.12);
+}
+
+/* ===========================
+   PAGE
+=========================== */
+.au-page{
+  min-height: 100svh;
+  background: var(--bg-grad) fixed;
+  background-size: 160% 160%;
+  animation: au-pan 20s linear infinite;
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Tahoma, Arial, sans-serif;
+  padding: 34px 18px 80px;
+}
+@keyframes au-pan{ to{ background-position:200% 200%; } }
+.au-page.au-dark{ background-size: auto; animation: none; }
+
+/* ===========================
+   LAYOUT
+=========================== */
+.products-wrap{
+  max-width: var(--container-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 18px;
+}
+@media (max-width: 992px){ .products-wrap{ grid-template-columns: 1fr; } }
+
+/* ===========================
+   SIDEBAR
+=========================== */
+.sidebar{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  position: sticky;
+  top: 86px;
+  height: fit-content;
+}
+.sidebar h3{ margin: 0 0 10px; font-size: 18px; letter-spacing: .3px; }
+.cat-list{ display: grid; gap: 8px; }
+.cat-btn{
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  border-radius: 12px;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform .1s ease, background .2s ease, border-color .2s ease;
+}
+.cat-btn:hover{ transform: translateY(-1px); }
+.cat-btn.active{ outline: var(--outline) solid var(--ring); background: var(--surface-strong); }
+
+/* ===========================
+   HEADER CONTROLS
+=========================== */
+.header-bar{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px; align-items: center;
+}
+@media (max-width: 768px){ .header-bar{ grid-template-columns: 1fr; } }
+.search{
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.search input{
+  width: 100%; background: transparent; border: none;
+  color: var(--text); outline: none; font-size: 14px;
+}
+.select{
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  color: var(--text);
+}
+.select option {
+  color: #0e1020;       /* نص غامق */
+  background: #ffffff;  /* خلفية بيضاء واضحة */
+}
+
+/* حتى في الدارك مود نخلي الخيارات واضحة */
+.au-page.au-dark .select option {
+  color: #0e1020;
+  background: #ffffff;
+}
+
+/* (اختياري) لو بعض المتصفحات ما طبّقت اللون */
+select option:checked,
+select option:hover {
+  color: #0e1020 !important;
+  background: #eaeaea !important;
+}
+
+.range{ display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+
+/* ===========================
+   GRID + CARD
+=========================== */
+.grid{
+  margin-top: 14px;
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 1200px){ .grid{ grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px){  .grid{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px){  .grid{ grid-template-columns: 1fr; } }
+
+.card{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;               /* عشان شارة الستوك */
+  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+}
+.card:hover{ transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+
+/* شارة الـ Stock على يمين أعلى الكارد */
+.stock-badge{
+  position: absolute;
+  top: 10px; right: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 999px;
+  border: 1px solid var(--chip-border);
+  background: rgba(0,0,0,.35);
+  color: #fff;
+  backdrop-filter: blur(6px);
+}
+.stock-badge.in   { background: rgba(22,163,74,.18);  border-color: rgba(22,163,74,.35);  color: #d1fae5; }
+.stock-badge.low  { background: rgba(245,158,11,.18); border-color: rgba(245,158,11,.35); color: #fff7ed; }
+.stock-badge.out  { background: rgba(239,68,68,.18);  border-color: rgba(239,68,68,.35);  color: #fee2e2; }
+
+.thumb{
+  height: 240px;
+  background: #1113;
+  display: grid; place-items: center; overflow: hidden;
+}
+.thumb img{
+  width: 100%; height: 100%;
+  object-fit: cover;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.body{
+  padding: 12px 12px 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  flex: 1 1 auto;
+}
+.title{
+  font-weight: 800; font-size: 15.5px; color: var(--text); opacity: .95;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  min-height: 44px;
+}
+.price{ font-weight: 900; letter-spacing: .3px; color: var(--white); }
+
+.actions{
+  margin-top: auto;
+  display: flex; gap: 10px;
+}
+.actions .btn{ flex: 1 1 0; }
+
+.btn{
+  cursor: pointer;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
+  color: var(--text);
+  transition: background .2s ease, transform .1s ease, box-shadow .2s ease;
+}
+.btn:hover{ transform: translateY(-1px); }
+.btn.cta{
+  background: var(--cta);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(34,197,94,.2);
+}
+.btn.cta:hover{ background: var(--cta-hover); }
+
+/* ===========================
+   SKELETON
+=========================== */
+.skel{
+  background: linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.15), rgba(255,255,255,.06));
+  background-size: 200% 100%;
+  animation: skel 1.2s linear infinite;
+  border-radius: 8px;
+}
+@keyframes skel{ to{ background-position: -200% 0; } }
+.card-skel{
+  height: 300px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* ===========================
+   MODAL
+=========================== */
+.modal-backdrop{
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.72);    /* أغمق */
+  display: grid; place-items: center;
+  padding: 20px; z-index: 1400;
+  backdrop-filter: blur(1.5px);
+}
+.modal{
+  width: min(980px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: grid; grid-template-columns: 1fr 1fr;
+  position: relative;
+}
+@media (max-width: 768px){ .modal{ grid-template-columns: 1fr; } }
+
+.modal-media{
+  background: #0e0f14;
+  min-height: 420px;
+  display: grid; place-items: center;
+  padding: 16px;
+}
+.modal-media img{
+  width: 100%; height: 100%;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.modal-body{ padding: 16px; display: grid; gap: 10px; }
+.modal-title{ font-size: 20px; font-weight: 800; }
+.modal-desc{ color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+/* صف العنوان/السعر والستوك يمين */
+.modal-row{
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 6px;
+}
+.modal-row > .stock-badge{ position: static; } /* داخل الصف، بدون absolute */
+
+.modal-actions{ display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 6px; }
+.close-x{
+  position: absolute; top: 10px; right: 12px;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  border-radius: 10px; padding: 8px 10px; cursor: pointer;
+}
