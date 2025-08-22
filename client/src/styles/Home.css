@@ -40,20 +40,104 @@ body{
 }
 
 /* -------------------------- Buttons --------------------------- */
-.btn{
+/* ==============================
+   Buttons (Home & Products)
+============================== */
+.btn {
   border: 0;
-  padding: 12px 18px;
-  border-radius: 12px;
+  padding: 8px 14px;              /* حجم مدمج */
+  border-radius: 10px;            /* حواف أنعم */
+  font-size: 0.85rem;             /* خط أصغر */
   font-weight: 600;
   cursor: pointer;
-  transition: transform .15s ease, box-shadow .2s ease, background .2s ease, color .2s ease, opacity .2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+  line-height: 1;
+  transition: all .18s ease;
 }
-.btn.primary{ background:#111; color:#fff; }
-.talafha-home[data-theme="dark"] .btn.primary{ background:#fff; color:#111; }
-.btn.ghost{ background: rgba(255,255,255,.65); backdrop-filter: blur(6px); }
-.talafha-home[data-theme="dark"] .btn.ghost{ background: rgba(0,0,0,.45); color: var(--ink); }
-.btn.small{ padding: 8px 12px; border-radius: 10px; }
-.btn:hover{ transform: translateY(-1px); }
+
+/* حجم أصغر مخصص */
+.btn.sm {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  min-width: 80px;
+}
+
+/* زر أساسي (ملوّن) */
+.btn.primary {
+  background: linear-gradient(135deg, #71b7e6, #9b59b6);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+.btn.primary:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+/* زر شفاف (ثانوي) */
+.btn.ghost {
+  background: transparent;
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,.5);
+}
+.btn.ghost:hover {
+  background: rgba(255,255,255,.08);
+}
+
+/* ثيمات */
+.talafha-home[data-theme="dark"] .btn.primary {
+  color: #fff; /* يضل أبيض لأن الخلفية غامقة */
+}
+.talafha-home[data-theme="dark"] .btn.ghost {
+  background: rgba(255,255,255,.08);
+  color: #fff;
+}
+.talafha-home[data-theme="light"] .btn.ghost {
+  color: #111;
+  border-color: rgba(0,0,0,.35);
+}
+
+/* Group row */
+.btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+
+/* Active/Pressed */
+.btn:active {
+  transform: translateY(0);
+}
+.btn.details {
+  background: #2a2a2a;
+  color: #fff;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+.btn.details:hover {
+  background: #3a3a3a;
+}
+.btn.cart {
+  background: #22c55e; /* أخضر */
+  color: #fff;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.35);
+}
+.btn.cart:hover {
+  background: #1faa55;
+  box-shadow: 0 6px 14px rgba(34, 197, 94, 0.45);
+}
+
 
 /* ---------------------------- Hero ---------------------------- */
 .hero{

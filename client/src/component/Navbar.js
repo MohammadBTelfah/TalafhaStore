@@ -112,46 +112,124 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
   };
 
   const fetchCart = async () => {
-    if (!token) { setCartItems([]); setCartCount(0); return; }
-    try {
-      const res = await axios.get("http://127.0.0.1:5002/api/cart/get-cart", {
-        headers: authHeader,
-      });
-      const items = res.data?.items || [];
-      setCartItems(items);
-      setCartCount(items.reduce((s, it) => s + it.quantity, 0));
-    } catch {
-      setCartItems([]); setCartCount(0);
-    }
-  };
+  if (!token) { setCartItems([]); setCartCount(0); return; }
+  try {
+    const res = await axios.get("http://127.0.0.1:5002/api/cart/get-cart", { headers: authHeader });
+    const data = res.data || {};
+    const items = Array.isArray(data.items)
+      ? data.items
+      : (Array.isArray(data?.cart?.items) ? data.cart.items : []);
+    setCartItems(items);
+    setCartCount(items.reduce((s, it) => s + Number(it.quantity || 0), 0));
+  } catch {
+    setCartItems([]); setCartCount(0);
+  }
+};
 
-  const changeQty = async (productId, change) => {
-    if (!token) return;
-    try {
+ const changeQty = async (productId, change) => {
+  if (!token) return;
+
+  // الكمية الحالية من الـ state
+  const current = cartItems.find(it => it.product._id === productId)?.quantity || 0;
+  const nextQty = current + change;
+
+  try {
+    if (change > 0) {
+      // زيادة 1
       await axios.post(
         "http://127.0.0.1:5002/api/cart/add-to-cart",
-        { productId, quantity: change },
+        { productId, quantity: 1 },
         { headers: authHeader }
       );
-      fetchCart();
-    } catch {}
-  };
+
+      // تحديث محلي فوري
+      setCartItems(prev =>
+        prev.map(it =>
+          it.product._id === productId ? { ...it, quantity: it.quantity + 1 } : it
+        )
+      );
+      setCartCount(c => c + 1);
+
+    } else {
+      // تنقيص
+      if (nextQty <= 0) {
+        // احذف العنصر نهائياً
+        await axios.delete("http://127.0.0.1:5002/api/cart/remove-from-cart", {
+          headers: authHeader,
+          data: { productId },
+        });
+
+        // تحديث محلي
+        setCartItems(prev => prev.filter(it => it.product._id !== productId));
+        setCartCount(c => Math.max(0, c - current)); // نقصنا كل الكمية
+      } else {
+        // ما في endpoint لتعديل مباشر → نحذف ثم نضيف بالكمية الجديدة
+        await axios.delete("http://127.0.0.1:5002/api/cart/remove-from-cart", {
+          headers: authHeader,
+          data: { productId },
+        });
+
+        await axios.post(
+          "http://127.0.0.1:5002/api/cart/add-to-cart",
+          { productId, quantity: nextQty },
+          { headers: authHeader }
+        );
+
+        // تحديث محلي
+        setCartItems(prev =>
+          prev.map(it =>
+            it.product._id === productId ? { ...it, quantity: nextQty } : it
+          )
+        );
+setCartCount(c => c + change);
+      }
+    }
+  } catch (e) {
+    console.error(e?.response?.data || e);
+    // fallback للتزامن مع السيرفر إذا صار أي تعارض
+    fetchCart();
+  }
+};
+
+
 
   const removeItem = async (item) => {
-    if (!token) return;
-    try {
-      await axios.delete("http://127.0.0.1:5002/api/cart/remove-from-cart", {
-        headers: authHeader,
-        data: { productId: item.product._id },
-      });
-      fetchCart();
-    } catch {}
-  };
+  if (!token) return;
+  try {
+    await axios.delete("http://127.0.0.1:5002/api/cart/remove-from-cart", {
+      headers: authHeader,
+      data: { productId: item.product._id },
+    });
 
-  const total = useMemo(
-    () => cartItems.reduce((t, it) => t + it.product.prodPrice * it.quantity, 0),
-    [cartItems]
-  );
+    setCartItems(prev => prev.filter(it => it.product._id !== item.product._id));
+    setCartCount(c => Math.max(0, c - Number(item.quantity || 0)));
+  } catch (e) {
+    console.error(e?.response?.data || e);
+    fetchCart();
+  }
+};
+// احسب الإجمالي
+const total = useMemo(() => {
+  if (!Array.isArray(cartItems)) return 0;
+  return cartItems.reduce((sum, it) => {
+    const price = Number(it?.product?.prodPrice || 0);
+    const qty   = Number(it?.quantity || 0);
+    return sum + price * qty;
+  }, 0);
+}, [cartItems]);
+useEffect(() => {
+  const onCartDelta = (e) => {
+    const delta = Number(e?.detail?.delta || 0);
+    if (!delta) return;
+    // حدّث العداد فوراً
+    setCartCount((c) => Math.max(0, c + delta));
+    // وإذا السلة مفتوحة، رجّع آخر حالة من السيرفر
+    if (cartOpen) fetchCart();
+  };
+  window.addEventListener("cart:delta", onCartDelta);
+  return () => window.removeEventListener("cart:delta", onCartDelta);
+}, [cartOpen]);
+
 
   const placeOrder = async () => {
     if (!token) return;
@@ -285,7 +363,11 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
                 {isDark ? <FiSun/> : <FiMoon/>}
               </IconButton>
 
-              <IconButton onClick={() => setCartOpen(true)} sx={{ color: textColor }} aria-label="cart">
+<IconButton
+  onClick={() => { fetchCart(); setCartOpen(true); }}
+  sx={{ color: textColor }}
+  aria-label="cart"
+>
                 <Badge badgeContent={cartCount} color="primary">
                   <FiShoppingCart />
                 </Badge>
@@ -402,18 +484,33 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
                 <List>
                   {cartItems.map((item) => (
                     <ListItem key={item.product._id} alignItems="flex-start" sx={{ py: 1 }}>
-                      <ListItemAvatar>
-                        <MUIAvatar
-                          src={`http://127.0.0.1:5002/${item.product.prodImage}`}
-                          variant="square"
-                          sx={{ bgcolor: iconBg }}
-                        />
-                      </ListItemAvatar>
+<ListItemAvatar sx={{ minWidth: 72 }}>
+  <MUIAvatar
+    variant="rounded"
+    alt={item.product.prodName}
+    src={`http://127.0.0.1:5002/uploads/${String(item.product.prodImage).replace(/\\/g,"/")}`}
+    sx={{
+      width: 64,
+      height: 64,
+      borderRadius: 2,
+      bgcolor: "#0e101a",
+      border: "1px solid rgba(255,255,255,.18)",
+      boxShadow: "0 2px 10px rgba(0,0,0,.25)",
+      overflow: "hidden",
+      "& img": {
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        display: "block"
+      }
+    }}
+  />
+</ListItemAvatar>
                       <ListItemText
-                        primary={<Typography fontWeight="bold">{item.product.prodName}</Typography>}
+  primary={<Typography fontWeight="bold">{item.product.prodName}</Typography>}
                         secondary={
-                          <Box component="div" sx={{ color: isDark ? "#cfd3e0" : "#333" }}>
-                            <Typography variant="body2">JD {item.product.prodPrice}</Typography>
+    <Box component="div" sx={{ color: isDark ? "#cfd3e0" : "#333" }}>
+      <Typography variant="body2">JD {item.product.prodPrice}</Typography>
                             <Box sx={{ display:"flex", alignItems:"center", mt:1 }}>
                               <QuantityButton onClick={()=>changeQty(item.product._id, -1)} disabled={item.quantity <= 1}><FiMinus/></QuantityButton>
                               <Typography sx={{ mx:1 }}>{item.quantity}</Typography>
@@ -431,7 +528,10 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
 
                 <Box sx={{ display:"flex", justifyContent:"space-between", mb:1 }}>
                   <Typography>Total:</Typography>
-                  <Typography fontWeight="bold">JD {total.toFixed(2)}</Typography>
+<Box sx={{ display:"flex", justifyContent:"space-between", mb:1 }}>
+  <Typography>Total:</Typography>
+  <Typography fontWeight="bold">JD {Number(total || 0).toFixed(2)}</Typography>
+</Box>
                 </Box>
 
                 <Button

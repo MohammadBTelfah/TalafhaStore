@@ -1,9 +1,8 @@
 import React from "react";
 import { Box, Container, Grid, IconButton, Typography, Tooltip } from "@mui/material";
 import { styled } from "@mui/system";
-import { FaFacebook,  FaInstagram, FaLinkedin, FaGithub } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaLinkedin, FaGithub } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
-
 
 /* ====== Helpers to pass custom prop to styled ====== */
 const forward = (p) => p !== "darkMode";
@@ -37,7 +36,7 @@ const SocialIcon = styled(IconButton, { shouldForwardProp: forward })(({ theme, 
 }));
 
 /* ====== Nav link ====== */
-const NavLink = styled(Typography, { shouldForwardProp: forward })(({ theme, darkMode }) => ({
+const NavLink = styled(Typography, { shouldForwardProp: forward })(({ theme }) => ({
   cursor: "pointer",
   padding: theme.spacing(1, 2),
   color: "#fff",
@@ -68,7 +67,27 @@ const Footer = ({ darkMode = false }) => {
     { icon: <FaGithub size={20} />, label: "GitHub", url: "https://github.com/MohammadBTelfah" },
   ];
 
-  const navLinks = ["Home", "About Us", "Products", "Contact Us", "Profile"];
+  // روابط أقسام نفس الصفحة (Scroll داخلي)
+  const navLinks = [
+    { label: "Home", href: "/" },
+    { label: "About Us", href: "/about" }, // حسب طلبك aboutus
+    { label: "Products", href: "/products" },
+    { label: "Contact Us", href: "/contact" },
+    { label: "Profile", href: "/profile" },
+  ];
+
+  // سكرول سلس عند الضغط على الروابط
+  const handleSmoothScroll = (e, href) => {
+    if (!href?.startsWith("#")) return; // لو رابط خارجي، خلّيه طبيعي
+    e.preventDefault();
+    const id = href.slice(1);
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      // لو بدك تغيّر الـ hash في URL بدون ما تقفّز الصفحة:
+      window.history.pushState({}, "", href);
+    }
+  };
 
   return (
     <FooterContainer component="footer" darkMode={darkMode}>
@@ -106,13 +125,13 @@ const Footer = ({ darkMode = false }) => {
               {navLinks.map((link, i) => (
                 <NavLink
                   key={i}
-                  darkMode={darkMode}
                   variant="body1"
                   component="a"
-                  href="#"
+                  href={link.href}
+                  onClick={(e) => handleSmoothScroll(e, link.href)}
                   sx={{ textAlign: { xs: "center", sm: "left" } }}
                 >
-                  {link}
+                  {link.label}
                 </NavLink>
               ))}
             </Box>

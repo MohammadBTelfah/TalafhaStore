@@ -2,10 +2,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import "../styles/products.css"; // تأكد من المسار
+import "../styles/products.css";
 
-const API_BASE = "http://localhost:5002"; // APIs
-const IMG_BASE = "http://localhost:5002/uploads"; // صور المنتجات
+const API_BASE = "http://localhost:5002";
+const IMG_BASE = "http://localhost:5002/uploads";
 
 export default function ProductsPage({ darkMode }) {
   const [products, setProducts] = useState([]);
@@ -17,12 +17,20 @@ export default function ProductsPage({ darkMode }) {
 
   // UI state
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState("newest");
+   const [sort, setSort] = useState("newest");
   const [priceMax, setPriceMax] = useState("");
   const [selectedCatId, setSelectedCatId] = useState("all");
 
   // Modal
   const [active, setActive] = useState(null);
+
+  // Snackbar
+  const [snack, setSnack] = useState({ open: false, text: "", variant: "success" });
+  const showSnack = (text, variant = "success", ms = 2500) => {
+    setSnack({ open: true, text, variant });
+    window.clearTimeout(showSnack._t);
+    showSnack._t = window.setTimeout(() => setSnack((s) => ({ ...s, open: false })), ms);
+  };
 
   // Helpers
   const getImageUrl = (fileName) => {
@@ -31,14 +39,15 @@ export default function ProductsPage({ darkMode }) {
   };
   const sameId = (a, b) => String(a || "").toLowerCase() === String(b || "").toLowerCase();
 
+  // ✅ شارة الستوك
   const stockClass = (n) => {
-    const s = Number(n || 0);
+    const s = Number(n ?? 0);
     if (s <= 0) return "stock-badge out";
     if (s <= 5) return "stock-badge low";
     return "stock-badge in";
   };
   const stockText = (n) => {
-    const s = Number(n || 0);
+    const s = Number(n ?? 0);
     if (s <= 0) return "Out of stock";
     if (s === 1) return "Only 1 left";
     if (s <= 5) return `${s} left`;
@@ -109,7 +118,9 @@ export default function ProductsPage({ darkMode }) {
     } else if (sort === "price-desc") {
       list.sort((a, b) => Number(b.prodPrice || 0) - Number(a.prodPrice || 0));
     } else if (sort === "name") {
-      list.sort((a, b) => String(a.prodName || "").localeCompare(String(b.prodName || "")));
+      list.sort((a, b) =>
+        String(a.prodName || "").localeCompare(String(b.prodName || ""))
+      );
     } else if (sort === "newest") {
       list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     }
@@ -117,24 +128,31 @@ export default function ProductsPage({ darkMode }) {
     return list;
   }, [products, selectedCatId, query, priceMax, sort]);
 
-  // Cart
-  const addToCart = async (product) => {
+  // Cart + Snackbar
+  const addToCart = async (product, qty = 1) => {
     try {
       const raw = localStorage.getItem("token") || "";
       const token = raw.startsWith("Bearer ") ? raw.slice(7) : raw;
       if (!token) {
-        alert("Please login first.");
+        showSnack("Please login first.", "error", 2500);
         return;
       }
+      const quantity = Math.max(1, Number(qty) || 1);
       await axios.post(
-        `${API_BASE}/api/cart/add-to-cart`,
-        { productId: product._id, quantity: 1 },
+        "http://127.0.0.1:5002/api/cart/add-to-cart",
+        { productId: product._id, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Added to cart ✅");
+      try {
+        window.dispatchEvent(new CustomEvent("cart:delta", { detail: { delta: quantity } }));
+        if (typeof window.onCartDelta === "function") window.onCartDelta(quantity);
+        localStorage.setItem("__cart_delta_ping__", String(Date.now()));
+      } catch {}
+      showSnack("proudct add sucsessfly", "success", 2200);
     } catch (e) {
-      console.error(e);
-      alert("Couldn't add to cart, try again.");
+      const msg = e?.response?.data?.message || e?.message || "Failed to add product";
+      console.error("AddToCart error:", e?.response?.data || e);
+      showSnack(msg, "error", 3000);
     }
   };
 
@@ -219,13 +237,12 @@ export default function ProductsPage({ darkMode }) {
             <div className="grid">
               {shown.map((p) => (
                 <div key={p._id} className="card">
-                  {/* شارة الـ Stock على اليمين */}
+                  {/* ✅ شارة الستوك ترجع هنا */}
                   <div className={stockClass(p.prodStock)}>{stockText(p.prodStock)}</div>
 
                   <div className="thumb">
                     <img src={getImageUrl(p.prodImage)} alt={p.prodName} />
                   </div>
-
                   <div className="body">
                     <div className="title">{p.prodName}</div>
                     <div className="price">JD {Number(p.prodPrice || 0).toFixed(2)}</div>
@@ -252,7 +269,7 @@ export default function ProductsPage({ darkMode }) {
             </div>
 
             <div className="modal-body">
-              {/* صف العنوان والسعر والستوك (الستوك يمين) */}
+              {/* العنوان/السعر + شارة الستوك يمين */}
               <div className="modal-row">
                 <div>
                   <div className="modal-title">{active.prodName}</div>
@@ -261,22 +278,25 @@ export default function ProductsPage({ darkMode }) {
                 <div className={stockClass(active.prodStock)}>{stockText(active.prodStock)}</div>
               </div>
 
-              <div style={{ color: "var(--muted)" }}>
-                {typeof active.prodCategory === "object" && active.prodCategory
-                  ? active.prodCategory.name || active.prodCategory.title || "Category"
-                  : "Category"}
-              </div>
-
               <div className="modal-desc">
                 {active.prodDescription || "No description provided."}
               </div>
-
               <div className="modal-actions">
                 <button className="btn cta" onClick={() => addToCart(active)}>Add to Cart</button>
                 <button className="btn" onClick={() => setActive(null)}>Close</button>
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Snackbar */}
+      {snack.open && (
+        <div className={`au-snack ${snack.variant}`}>
+          <span className="au-snack-text">{snack.text}</span>
+          <button className="au-snack-x" onClick={() => setSnack((s) => ({ ...s, open: false }))}>
+            ✕
+          </button>
         </div>
       )}
     </div>

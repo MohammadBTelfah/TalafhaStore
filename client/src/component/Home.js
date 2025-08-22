@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Snackbar, Box } from "@mui/material";
+
 import "../styles/Home.css";
+import { useNavigate } from "react-router-dom";
+
 import axios from "axios";
 /* -------------------- Reveal-on-scroll hook -------------------- */
+
 function useReveal(options = { threshold: 0.15 }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -87,6 +92,7 @@ function Tagline() {
   );
 }
 /* --------------------- Featured Products ----------------------- */
+
 const currency = (n) =>
   new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n ?? 0);
 
@@ -95,11 +101,16 @@ function getImageUrl(fileName) {
   return `http://127.0.0.1:5002/uploads/${fileName.replace(/^\/+/, "")}`;
 }
 function FeaturedProducts() {
+  
   const ref = useReveal();
+  const navigate = useNavigate();            // ✅ لازم هنا
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-
+  const [snack, setSnack] = useState({ open: false, msg: "", severity: "success" });
+  const showSnack = (msg, severity = "success") => {
+    setSnack({ open: true, msg, severity });
+  };
   useEffect(() => {
     const src = axios.CancelToken.source();
     setLoading(true);
@@ -110,7 +121,7 @@ function FeaturedProducts() {
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
         const normalized = data.map((p) => ({
-          id: p._id,
+          id: p._id,                         // ← نحفظه باسم id
           name: p.prodName,
           price: p.prodPrice,
           img: getImageUrl(p.prodImage),
@@ -126,19 +137,46 @@ function FeaturedProducts() {
     return () => src.cancel("unmounted");
   }, []);
 
+  // ✅ Add to cart للهوم
+    const addToCart = async (productId, qty = 1) => {
+    try {
+      const raw = localStorage.getItem("token") || "";
+      const token = raw.startsWith("Bearer ") ? raw.slice(7) : raw;
+      if (!token) {
+        showSnack("Please login first.", "error");
+        return;
+      }
+
+      const quantity = Math.max(1, Number(qty) || 1);
+      await axios.post(
+        "http://127.0.0.1:5002/api/cart/add-to-cart",
+        { productId, quantity },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // 🔔 تحديت عداد السلة مباشرة
+      window.dispatchEvent(new CustomEvent("cart:delta", { detail: { delta: quantity } }));
+
+showSnack("proudct add sucsessfly"); // نفس تهجئتك المطلوبة 🙂
+    } catch (e) {
+      console.error("AddToCart (home) error:", e?.response?.data || e);
+      showSnack("❌ Failed to add product", "error");
+    }
+  };
+
   return (
-    <section id="featured" className="section reveal" ref={ref}>
+       <section id="featured" className="section reveal" ref={ref}>
       <div className="section-head">
         <h2 data-reveal style={dstyle(0)}>Featured products</h2>
         <p data-reveal style={dstyle(1)}>Curated picks from Talafha — quality gear at friendly prices.</p>
       </div>
 
+
       {err && <div className="error" data-reveal style={dstyle(2)}>{err}</div>}
       {!loading && items.length === 0 && (
-<p style={{ ...dstyle(3), color: "#fff" }} data-reveal>
-  No featured products yet.
-</p>
+        <p style={{ ...dstyle(3), color: "#fff" }} data-reveal>No featured products yet.</p>
       )}
+
       <div className="grid products">
         {loading
           ? Array.from({ length: 6 }).map((_, i) => (
@@ -155,32 +193,106 @@ function FeaturedProducts() {
               </article>
             ))
           : items.map((p, i) => (
-              <article className="card product" key={p.id}
-                       data-reveal style={dstyle(i)}>
+              <article className="card product" key={p.id} data-reveal style={dstyle(i)}>
                 <div className="thumb">
                   <img
                     src={p.img}
                     alt={p.name}
-                    onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/400x300?text=No+Image";
-                    }}
+                    onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/400x300?text=No+Image"; }}
                   />
                   {p.tag ? <span className="chip">{p.tag}</span> : null}
                 </div>
+
                 <div className="meta">
                   <h3>{p.name}</h3>
                   <p className="price">{currency(p.price)}</p>
-                  <div className="row">
-                    <button className="btn small primary">Add to cart</button>
-                    <button className="btn small ghost">View details</button>
+
+                  <div className="btn-row">
+                    {/* ✅ Add to cart */}
+                    <button className="btn cart" onClick={() => addToCart(p.id)}>Add to Cart</button>
+
+                    {/* ✅ كل منتج يروح لصفحة الـ products بــ id الخاص فيه */}
+                   <button
+                  className="btn details"
+                      onClick={() => navigate(`/products?productId=${encodeURIComponent(p.id)}`)}
+                      >
+                     See Details
+                        </button>
+
                   </div>
                 </div>
               </article>
             ))}
       </div>
+    <Snackbar
+  open={snack.open}
+  autoHideDuration={3000}
+  onClose={() => setSnack((s) => ({ ...s, open: false }))}
+  anchorOrigin={{ vertical: "top", horizontal: "center" }}
+>
+  <Box
+    sx={{
+      bgcolor: "rgba(255,255,255,0.08)",
+      color: "#fff",
+      px: 2.5,
+      py: 1.75,
+      borderRadius: "18px",
+      backdropFilter: "blur(10px)",
+      WebkitBackdropFilter: "blur(10px)",
+      border: "1px solid rgba(255,255,255,0.20)",
+      boxShadow:
+        "0 10px 35px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)",
+      display: "flex",
+      alignItems: "center",
+      gap: 2,
+      minWidth: 320,
+      maxWidth: "min(92vw, 560px)",
+      position: "relative",
+      // لمسة توهج أخضر خفيف مثل الصورة
+      "&::after": {
+        content: '""',
+        position: "absolute",
+        inset: 0,
+        borderRadius: "18px",
+        boxShadow:
+          "0 0 0 1px rgba(34,197,94,.45), 0 0 28px rgba(34,197,94,.18) inset",
+        pointerEvents: "none",
+      },
+      fontWeight: 800,
+      fontSize: "1rem",
+      letterSpacing: ".2px",
+    }}
+  >
+    <span style={{ whiteSpace: "pre-line" }}>{snack.msg}</span>
+
+    <button
+      onClick={() => setSnack((s) => ({ ...s, open: false }))}
+      style={{
+        marginLeft: "auto",
+        width: 38,
+        height: 38,
+        borderRadius: 12,
+        background: "rgba(0,0,0,.35)",
+        color: "#fff",
+        border: "1px solid rgba(255,255,255,.28)",
+        display: "grid",
+        placeItems: "center",
+        cursor: "pointer",
+        outline: "none",
+      }}
+      aria-label="Close"
+      title="Close"
+    >
+      ✕
+    </button>
+  </Box>
+</Snackbar>
     </section>
+    
   );
+  
 }
+
 /* -------------------------- Categories ------------------------- */
 const IMG_MAP = {
   laptop:
@@ -246,7 +358,7 @@ function Categories() {
               className="card category"
               data-reveal
               style={{ ...dstyle(i), position: "relative", overflow: "hidden", borderRadius: 16, height: 220, boxShadow: "0 18px 40px rgba(0,0,0,.25)", background: "#3b3f4a" }}
-              href={loading ? "#" : `/category/${c?._id || name}`}
+href={loading ? "#" : `/products?category=${encodeURIComponent(c?._id || name)}`}
               key={loading ? i : c?._id || name}
             >
               {!loading && (
@@ -369,17 +481,53 @@ function FlashDeal() {
 
   return (
     <section className="section reveal" ref={ref}>
-      <div className="card" data-reveal style={{ ...dstyle(0), display:"flex", alignItems:"center", justifyContent:"space-between", padding:20 }}>
-        <div>
-          <h2 style={{margin:"0 0 4px"}}>Flash deals</h2>
-          <p style={{margin:0}}>Ends in {d}d {h}h {m}m {sec}s</p>
-        </div>
-        <a href="/deals" className="btn primary">Shop deals</a>
+      <div
+        className="card flash-deal"
+        data-reveal
+        style={{
+          background: "linear-gradient(135deg, #71b7e6, #9b59b6)",
+          color: "#fff",
+          padding: "30px 40px",
+          borderRadius: "18px",
+          textAlign: "center",
+          boxShadow: "0 12px 30px rgba(0,0,0,.25)",
+        }}
+      >
+        <h2 style={{ margin: "0 0 10px", fontSize: "1.8rem", fontWeight: "800" }}>
+          ⚡ Flash Deals
+        </h2>
+        <p
+          style={{
+            margin: "0 0 20px",
+            fontSize: "1.3rem",
+            fontFamily: "'Courier New', monospace",
+            letterSpacing: "1px",
+          }}
+        >
+          Ends in {d}d {h}h {m}m {sec}s
+        </p>
+        <a
+          href="/deals"
+          style={{
+            padding: "10px 22px",
+            borderRadius: "12px",
+            fontWeight: "700",
+            fontSize: "1rem",
+            background: "#fff",
+            color: "#9b59b6",
+            textDecoration: "none",
+            boxShadow: "0 6px 16px rgba(0,0,0,.2)",
+            transition: "all .2s ease",
+          }}
+          onMouseOver={(e) => (e.currentTarget.style.opacity = "0.9")}
+          onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
+        >
+          Shop Deals
+        </a>
       </div>
     </section>
   );
 }
-
 /* --------------------- Recently Viewed --------------------- */
 function RecentlyViewed() {
   const ref = useReveal();
@@ -453,6 +601,7 @@ function FAQ() {
 
 /* --------------------------- Home ------------------------------ */
 export default function Home({ darkMode }) {
+  const navigate = useNavigate();   
   const theme = darkMode ? "dark" : "light";
   return (
     <div className="talafha-home" data-theme={theme}>
