@@ -213,19 +213,7 @@ useEffect(() => {
 }, [cartOpen]);
 
 
-  const placeOrder = async () => {
-    if (!token) return;
-    try {
-      await axios.post("http://127.0.0.1:5002/api/orders/place-order", {}, {
-        headers: authHeader,
-      });
-      setCartItems([]); setCartCount(0);
-      setSnackbarKey(k => k + 1); setSuccessOpen(true);
-    } catch {
-      alert("Something went wrong while placing the order. Please try again.");
-    }
-  };
-
+  
   useEffect(() => {
     const run = async () => {
       if (!token) { resetAuthState(); return; }
@@ -505,19 +493,20 @@ useEffect(() => {
 </Box>
                 </Box>
 
-                <Button
-                  variant="contained"
-                  fullWidth
-                  onClick={placeOrder}
-                  sx={{
-                    mt:.5,
-                    backgroundImage: GRAD,
-                    color: "#0e1020",
-                    fontWeight: 800
-                  }}
-                >
-                  Proceed to Checkout
-                </Button>
+               <Button
+  variant="contained"
+  fullWidth
+  onClick={() => navigate("/checkout")} // 👈 بدل placeOrder
+  sx={{
+    mt: .5,
+    backgroundImage: GRAD,
+    color: "#0e1020",
+    fontWeight: 800
+  }}
+>
+  Proceed to Checkout
+</Button>
+
               </>
             )}
           </Box>
