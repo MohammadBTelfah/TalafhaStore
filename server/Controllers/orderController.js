@@ -1,46 +1,107 @@
+// controllers/orderController.js
+const mongoose = require('mongoose');
 const Orders = require('../models/Orders');
+const Products = require('../models/Products'); // موديـل المنتجات اسمه "Products.js"
 const Cart = require('../models/Cart');
 
 exports.PlaceOrder = async (req, res) => {
-  try {
-    const { shippingAddress, paymentMethod } = req.body;
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    if (!shippingAddress || !paymentMethod) {
-      return res.status(400).json({ message: 'Shipping address and payment method are required' });
+  try {
+    const userId = req.user?._id || req.user?.id || req.userId;
+    if (!userId) {
+      await session.abortTransaction(); session.endSession();
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
-    if (!cart || cart.items.length === 0) {
+    const { shippingAddress, paymentMethod } = req.body;
+    if (!shippingAddress || !paymentMethod) {
+      await session.abortTransaction(); session.endSession();
+      return res.status(400).json({ message: 'shippingAddress and paymentMethod are required' });
+    }
+    if (!['card', 'cash'].includes(paymentMethod)) {
+      await session.abortTransaction(); session.endSession();
+      return res.status(400).json({ message: 'paymentMethod must be card or cash' });
+    }
+
+    // Bring cart with product docs
+    const cart = await Cart.findOne({ user: userId })
+      .populate('items.product')
+      .session(session);
+
+    if (!cart || !Array.isArray(cart.items) || cart.items.length === 0) {
+      await session.abortTransaction(); session.endSession();
       return res.status(400).json({ message: 'Cart is empty' });
     }
 
-    const items = cart.items.map(item => ({
-      product: item.product._id,
-      quantity: item.quantity,
-      priceAtTime: item.product.prodPrice
-    }));
+    // Validate stock first
+    for (const it of cart.items) {
+      const prodDoc = it.product; // populated
+      const qty = Number(it.quantity ?? it.qty ?? 1);
+      if (!prodDoc?._id) {
+        await session.abortTransaction(); session.endSession();
+        return res.status(400).json({ message: 'Invalid cart item (missing product)' });
+      }
+      if (Number(prodDoc.prodStock) < qty) {
+        await session.abortTransaction(); session.endSession();
+        return res.status(400).json({ message: `Insufficient stock for ${prodDoc.prodName}` });
+      }
+    }
 
-    const total = items.reduce((sum, item) => sum + (item.priceAtTime * item.quantity), 0);
-
-    const order = new Orders({
-      user: req.user._id,
-      items,
-      total,
-      shippingAddress,
-      paymentMethod,
-      status: 'pending'
+    // Build order items + total
+    const items = cart.items.map((it) => {
+      const qty = Number(it.quantity ?? it.qty ?? 1);
+      const priceAtTime = Number(it.product?.prodPrice ?? it.priceAtTime ?? 0);
+      return { product: it.product._id, quantity: qty, priceAtTime };
     });
+    const total = items.reduce((s, x) => s + x.priceAtTime * x.quantity, 0);
 
-    await order.save();
+    // Create order
+    const [order] = await Orders.create(
+      [
+        {
+          user: userId,
+          items,
+          total,
+          shippingAddress, // String (per Orders schema)
+          paymentMethod,   // 'card' | 'cash'
+          status: 'pending',
+        },
+      ],
+      { session }
+    );
 
-    const populatedOrder = await Orders.findById(order._id).populate('items.product');
+    // Decrement stock atomically for each item
+    for (const it of items) {
+      const upd = await Products.updateOne(
+        { _id: it.product, prodStock: { $gte: it.quantity } },
+        { $inc: { prodStock: -it.quantity } }
+      ).session(session);
 
-    await Cart.findOneAndDelete({ user: req.user._id });
+      if (upd.matchedCount === 0 || upd.modifiedCount === 0) {
+        await session.abortTransaction(); session.endSession();
+        return res
+          .status(409)
+          .json({ message: 'Stock changed while ordering. Please refresh your cart.' });
+      }
+    }
 
-    res.status(201).json({ message: 'Order placed successfully', order: populatedOrder });
-  } catch (error) {
-    console.error("Error placing order:", error);
-    res.status(500).json({ message: 'Server error placing order', error: error.message });
+    // Clear cart
+    await Cart.deleteOne({ user: userId }).session(session);
+
+    await session.commitTransaction();
+    session.endSession();
+
+    const full = await Orders.findById(order._id).populate('items.product');
+    return res.status(201).json({ message: 'Order placed successfully', order: full });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error('PlaceOrder error:', err);
+    return res
+      .status(500)
+      .json({ message: 'Server error placing order', error: err.message });
   }
 };
 

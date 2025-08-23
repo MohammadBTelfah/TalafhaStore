@@ -192,7 +192,7 @@ export default function ProfilePage({ darkMode = false }) {
     }
   };
 
-  const pageClass = `au-page${darkMode ? " au-dark" : ""}`;
+const pageClass = `au-page au-profile${darkMode ? " au-dark" : ""}`;
 
   return (
     <div className={pageClass}>

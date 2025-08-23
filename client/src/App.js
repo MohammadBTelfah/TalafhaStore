@@ -18,6 +18,7 @@ import AboutUs from "./component/aboutus";
 import Home from "./component/Home";
 import ProfilePage from "./component/ProfilePage";
 import ProductsPage from "./component/proudcts";
+import Checkout from "./component/checkout";
 function AppBackground({ darkMode }) {
   const location = useLocation();
   useEffect(() => {
@@ -89,7 +90,7 @@ function App() {
               <Route path="/contact" element={<ContactUs darkMode={darkMode} />} />
               <Route path="/profile" element={<ProfilePage darkMode={darkMode} />} /> 
                <Route path="/products" element={<ProductsPage darkMode={darkMode} />} />
-               {/* <Route path="/checkout" element={<Checkout darkMode={darkMode} />} /> */}
+               <Route path="/checkout" element={<Checkout darkMode={darkMode} />} />
 
 
 

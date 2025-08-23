@@ -1,0 +1,406 @@
+/* ===========================
+   THEME TOKENS
+=========================== */
+:root{
+  /* page bg */
+  --bg-grad: linear-gradient(135deg, #71b7e6, #9b59b6);
+
+  /* text */
+  --text: #ffffff;
+  --muted: #dfe2f1;
+
+  /* glass surfaces (Light) */
+  --surface: rgba(255,255,255,0.06);
+  --surface-strong: rgba(255,255,255,0.08);
+  --chip-bg: rgba(255,255,255,0.12);
+  --chip-border: rgba(255,255,255,0.28);
+
+  /* borders / rings */
+  --border: rgba(255,255,255,0.22);
+  --ring: rgba(255,255,255,0.12);
+
+  --white: #ffffff;
+  --radius: 20px;
+  --outline: 2px;
+  --container-max: 1500px;
+}
+
+/* DARK THEME */
+.au-page.au-dark{
+  --bg-grad: #0B0D19;
+  --text: #f5f5f5;
+  --muted: #b7bccf;
+  --surface: rgba(255,255,255,0.06);
+  --surface-strong: rgba(255,255,255,0.10);
+  --chip-bg: rgba(255,255,255,0.10);
+  --chip-border: rgba(255,255,255,0.22);
+  --border: rgba(255,255,255,0.18);
+  --ring: rgba(255,255,255,0.12);
+}
+
+/* ===========================
+   PAGE
+=========================== */
+.au-page{
+  min-height: 100svh;
+  background: var(--bg-grad) fixed;
+  background-size: 160% 160%;
+  animation: au-pan 20s linear infinite;
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Tahoma, Arial, sans-serif;
+  padding: 34px 18px 80px;
+}
+@keyframes au-pan{ to{ background-position:200% 200%; } }
+
+.au-page.au-dark{
+  background-size: auto;
+  animation: none;
+}
+
+.au-container{
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+.au-stepper{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  user-select: none;
+}
+
+.step-badge{
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 0 0 var(--outline) transparent;
+  transition: box-shadow .2s ease, background .2s ease, border-color .2s ease;
+}
+.step-badge .idx{
+  display: grid; place-items: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  font-weight: 700;
+}
+.step-badge .txt{ opacity: .85; font-weight: 600; }
+.step-badge.active{ background: var(--surface-strong); }
+.step-badge.current{ box-shadow: 0 0 0 var(--outline) var(--ring); }
+
+.step-line{
+  flex: 1; height: 2px; background: var(--border); opacity: .6;
+}
+
+/* Panel */
+.au-panel{
+  background: rgba(0,0,0,0.12);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  backdrop-filter: blur(6px);
+}
+
+/* Grid */
+.au-grid{
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 980px){
+  .au-grid{ grid-template-columns: 1fr; }
+}
+
+/* Card */
+.au-card{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 6px);
+  padding: 16px;
+}
+.au-h2{ margin: 0 0 10px; font-size: 22px; }
+.au-h3{ margin: 0 0 10px; font-size: 18px; }
+
+/* Table */
+.au-table{
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  overflow: hidden;
+}
+.au-table th, .au-table td{
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.au-table thead th{
+  font-size: 13px; text-transform: uppercase; letter-spacing: .04em; opacity: .85;
+}
+.t-center{ text-align: center; }
+.t-right{ text-align: right; }
+.t-product{ display: flex; align-items: center; gap: 10px; }
+.t-product img, .au-img-ph{
+  width: 42px; height: 42px; border-radius: 8px; object-fit: cover;
+  background: var(--chip-bg); border: 1px solid var(--chip-border);
+}
+
+/* Inputs */
+.au-label{ display: grid; gap: 6px; font-size: 14px; margin-bottom: 12px; }
+.au-input{
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 12px 14px;
+  outline: none;
+  transition: box-shadow .2s ease, border-color .2s ease, background .2s ease;
+}
+.au-input:focus{
+  border-color: var(--chip-border);
+  box-shadow: 0 0 0 var(--outline) var(--ring);
+}
+textarea.au-input{ min-height: 90px; resize: vertical; }
+
+.au-row-2{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Summary */
+.au-summary{
+  margin-top: 8px;
+  border-top: 1px dashed var(--border);
+  padding-top: 10px;
+  display: grid; gap: 8px;
+}
+.au-summary .row{
+  display: flex; align-items: center; justify-content: space-between;
+}
+.au-summary .row.total{
+  font-weight: 700; font-size: 18px;
+}
+
+/* Actions */
+.au-actions{
+  margin-top: 14px;
+  display: flex; gap: 10px; justify-content: flex-end;
+}
+.au-actions.spaced{ justify-content: space-between; }
+
+.au-btn{
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .04s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.au-btn:hover{ background: rgba(255,255,255,0.14); }
+.au-btn:active{ transform: translateY(1px); }
+.au-btn:disabled{ opacity: .5; cursor: not-allowed; }
+
+.au-btn.ghost{
+  background: transparent;
+}
+
+/* Empty & skeleton */
+.au-empty{
+  padding: 18px; text-align: center; opacity: .8;
+}
+.au-skeleton-list{ display: grid; gap: 8px; }
+.au-skeleton{
+  height: 44px; border-radius: 10px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+  animation: au-shine 1.2s linear infinite;
+  border: 1px solid var(--border);
+}
+@keyframes au-shine{
+  0%{ background-position: 0 0; background-size: 200% 100%; }
+  100%{ background-position: 200% 0; }
+}
+
+/* Payment card preview */
+.au-card-preview{
+  position: relative;
+  perspective: 1000px;
+  height: 210px;
+  margin: 8px 0 16px;
+}
+.au-card-preview .card-face{
+  position: absolute; inset: 0;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+  backdrop-filter: blur(6px);
+  padding: 16px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  transform: rotateY(0deg);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  transition: transform .5s ease;
+}
+.au-card-preview .card-back{
+  transform: rotateY(180deg);
+}
+.au-card-preview.is-back .card-front{ transform: rotateY(180deg); }
+.au-card-preview.is-back .card-back{ transform: rotateY(360deg); }
+
+.card-front .brand{
+  justify-self: end; font-weight: 900; letter-spacing: .08em; font-size: 18px; opacity: .9;
+}
+.card-front .chip{
+  width: 44px; height: 32px; border-radius: 6px;
+  background: linear-gradient(135deg, #ffd089, #f7b24d);
+  border: 1px solid rgba(0,0,0,0.15);
+}
+.card-front .num{
+  align-self: center;
+  letter-spacing: .12em;
+  font-weight: 700;
+  font-size: 20px;
+}
+.card-front .meta{
+  display: flex; justify-content: space-between; gap: 12px; align-items: end;
+}
+.card-front .lbl{ font-size: 11px; opacity: .7; text-transform: uppercase; letter-spacing: .08em; }
+.card-front .val{ font-weight: 700; }
+
+.card-back .mag{
+  margin-top: 14px;
+  height: 44px; background: rgba(0,0,0,0.5); border-radius: 4px;
+}
+.card-back .sign{
+  margin-top: 16px;
+  background: rgba(255,255,255,0.8);
+  color: #111;
+  padding: 8px 10px;
+  border-radius: 6px;
+  display: flex; align-items: center; gap: 10px; justify-content: space-between;
+}
+.card-back .sign .cvv{
+  font-weight: 800; letter-spacing: .2em;
+}
+
+/* Form sizing */
+.au-form{ display: grid; gap: 10px; }
+
+/* Review list */
+.au-mini-list{
+  list-style: none; padding: 0; margin: 0 0 14px;
+  display: grid; gap: 10px;
+}
+.au-mini-list li{
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.muted{ opacity: .7; }
+
+/* Items list (review) */
+.au-items{ display: grid; gap: 10px; }
+.au-item{
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+  border: 1px solid var(--border); border-radius: 12px; padding: 8px;
+  background: var(--surface);
+}
+.au-item img, .au-item .au-img-ph{
+  width: 50px; height: 50px; border-radius: 8px; object-fit: cover;
+}
+.au-item .title{ font-weight: 700; }
+.au-item .price{ font-weight: 700; }
+.au-check{ display: flex; gap: 10px; align-items: center; margin: 8px 0 4px; }
+/* Actions داخل كرت الملخص */
+.au-summary-actions{
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
+.au-btn.big{
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 800;
+  background: var(--surface-strong);
+}
+
+.au-btn.danger{
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+.au-btn.danger:hover{ background: rgba(255,107,107,0.12); }
+
+/* Countdown */
+.au-confirm{ width: 100%; display: grid; gap: 8px; }
+.au-confirm .txt{ font-weight: 700; text-align: right; }
+.au-countdown-bar{
+  width: 100%; height: 6px; border-radius: 6px; background: var(--border); overflow: hidden;
+}
+.au-countdown-bar > span{
+  display: block; height: 100%; background: #4d7dff; transition: width .3s ease;
+}
+
+/* Overlay + loader + check */
+.au-overlay{
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: grid; place-items: center; z-index: 9999;
+}
+.au-modal{
+  width: min(520px, 92vw);
+  background: var(--white);
+  color: #111;
+  border-radius: 16px;
+  padding: 28px 24px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.35);
+  display: grid; gap: 16px; justify-items: center;
+}
+.au-page.au-dark .au-modal{
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.au-modal .title{
+  font-weight: 900; font-size: 18px;
+}
+
+/* spinner */
+.au-loader{
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.25);
+  border-top-color: #4d7dff;
+  animation: au-spin 1s linear infinite;
+}
+.au-page:not(.au-dark) .au-loader{
+  border: 4px solid rgba(0,0,0,0.12);
+  border-top-color: #4d7dff;
+}
+@keyframes au-spin { to { transform: rotate(360deg); } }
+
+/* checkmark */
+.au-check{
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 4px solid #44d07b; position: relative;
+}
+.au-check::after{
+  content: ""; position: absolute; left: 14px; top: 26px;
+  width: 0; height: 0; border: 4px solid #44d07b; border-top: 0; border-right: 0;
+  transform: rotate(-45deg);
+  animation: au-draw .4s ease .1s forwards;
+}
+@keyframes au-draw {
+  to { width: 16px; height: 10px; }
+}
+
+/* hint */
+.au-hint{ font-size: 12px; opacity: .7; }
