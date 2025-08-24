@@ -311,6 +311,12 @@ const IMG_MAP = {
     "https://media.istockphoto.com/id/1170073824/photo/gamer-work-space-concept-top-view-a-gaming-gear-mouse-keyboard-joystick-headset-mobile.jpg?s=612x612&w=0&k=20&c=2d8z6CmJn6R1GaPpJ4HB4J43y4e0wOL4nusPM2Dhq34=",
   men:
     "https://cdn.shopify.com/s/files/1/2294/8559/files/A_Guide_To_Men_s_Summer_Clothing-01.jpg?v=1746471733",
+    games:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCax-aU61KsvyTSQE-IBwMylLqX5LG8QCmdg&s",
+    sports:
+    "https://t4.ftcdn.net/jpg/05/53/86/01/360_F_553860129_ijFLSAeTvZ8Qpk8z4h9B9bzBKxWjrvUZ.jpg",
+    beauty:
+    "https://images.preview.ph/preview/resize/images/2021/12/22/preview-beauty-awards-skincare-nm.webp"
 };
 
 const imgFor = (name = "product") => {

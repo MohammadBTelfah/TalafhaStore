@@ -19,6 +19,7 @@ import Home from "./component/Home";
 import ProfilePage from "./component/ProfilePage";
 import ProductsPage from "./component/proudcts";
 import Checkout from "./component/checkout";
+import OrderHistory from "./component/orderHistory";
 function AppBackground({ darkMode }) {
   const location = useLocation();
   useEffect(() => {
@@ -91,6 +92,8 @@ function App() {
               <Route path="/profile" element={<ProfilePage darkMode={darkMode} />} /> 
                <Route path="/products" element={<ProductsPage darkMode={darkMode} />} />
                <Route path="/checkout" element={<Checkout darkMode={darkMode} />} />
+               <Route path="/order-history" element={<OrderHistory darkMode={darkMode} />} />
+
 
 
 

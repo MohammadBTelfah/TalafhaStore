@@ -27,6 +27,8 @@ import { Category } from '../adminComponent/AddCategory';
 import axios from 'axios';
 import RedeemIcon from '@mui/icons-material/Redeem';
 import CategoryIcon from '@mui/icons-material/Category';
+import OrdersManagement from '../adminComponent/adminOrders';
+import DashboardStats from './DashboardStats';
 
 const demoTheme = createTheme({
   cssVariables: {
@@ -51,7 +53,7 @@ function DemoPageContent({ pathname, profileData }) {
     >
       {pathname === "/dashboard" && (
         <Typography variant="h4" gutterBottom>
-          Page Dashboard
+          <DashboardStats/>
         </Typography>
       )}
 
@@ -75,7 +77,11 @@ function DemoPageContent({ pathname, profileData }) {
           <AllUsers/>
         </Typography>
       )}
-    
+    {pathname === "/orders" && (
+        <Typography variant="h4" gutterBottom>
+          <OrdersManagement/>
+        </Typography>
+      )}
     
     
 

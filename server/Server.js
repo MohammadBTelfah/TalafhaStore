@@ -12,7 +12,7 @@ const categoryRoutes = require('./Routes/categoryRoutes');
 const CartRoutes = require('./Routes/CartRoutes');
 const OrderRoutes = require('./Routes/orderRoutes');
 const contactRoutes = require('./Routes/ContactRoutes');
-
+const adminStatsRoutes =require('./Routes/adminStatsRoutes')
 
 const path = require('path');
 const cors = require('cors');
@@ -50,6 +50,8 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/cart', CartRoutes);
 app.use('/api/orders', OrderRoutes);
 app.use('/api/contact', contactRoutes); // 👈 add this line
+app.use('/api/admin/stats',adminStatsRoutes)
+
 
 
 // ✅ MongoDB Connection

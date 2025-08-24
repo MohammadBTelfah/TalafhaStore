@@ -1,0 +1,126 @@
+/* ========= uses same tokens already defined globally ========= */
+@keyframes au-pan{ to{ background-position:200% 200%; } }
+@keyframes au-shine{0%{background-position:-200% 0;}100%{background-position:200% 0;}}
+
+/* PAGE */
+.au-page.au-orders{
+  min-height:100svh;
+  background: var(--bg-grad) fixed;
+  background-size:160% 160%;
+  animation: au-pan 20s linear infinite;
+  color: var(--text);
+  font-family: system-ui,-apple-system,"Segoe UI",Roboto,Tahoma,Arial,sans-serif;
+  padding:34px 18px 80px;
+}
+.au-page.au-orders.au-dark{
+  --bg-grad:#0B0D19;
+  --text:#f5f5f5; --muted:#b7bccf;
+  --surface: rgba(255,255,255,0.06);
+  --surface-strong: rgba(255,255,255,0.10);
+  --chip-bg: rgba(255,255,255,0.10);
+  --chip-border: rgba(255,255,255,0.22);
+  --border: rgba(255,255,255,0.18);
+  --ring: rgba(255,255,255,0.12);
+  background-size:auto; animation:none;
+}
+.au-orders .au-container{ max-width:var(--container-max); margin:0 auto; }
+.au-orders .muted{ color:var(--muted); }
+
+/* HEADER */
+.au-orders .orders-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.au-orders .title{ margin:0; font-size:30px; letter-spacing:.2px; }
+.au-orders .chips{ display:flex; gap:8px; flex-wrap:wrap; }
+.au-orders .chip{
+  padding:6px 10px; background:var(--chip-bg); border:1px solid var(--chip-border);
+  border-radius:999px; font-size:12px;
+}
+
+/* CARDS */
+.au-orders .au-card{
+  background: linear-gradient(180deg,var(--surface),var(--surface-strong));
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.18), inset 0 1px 0 var(--ring);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.au-orders .orders-list{ display:grid; gap:14px; }
+.au-orders .order-card .order-head{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px;
+}
+.au-orders .order-card .row1{ display:flex; align-items:center; gap:10px; }
+.au-orders .order-id{ font-weight:800; }
+.au-orders .status-chip{
+  padding:4px 10px; border-radius:999px; border:1px solid var(--chip-border); background:var(--chip-bg); font-size:12px;
+}
+.au-orders .status-chip.delivered{ border-color:rgba(50,205,50,.35); }
+.au-orders .status-chip.pending,
+.au-orders .status-chip.processing{ border-color:rgba(255,193,7,.45); }
+.au-orders .order-head .right{ display:flex; align-items:center; gap:10px; }
+.au-orders .total{ display:grid; text-align:right; }
+.au-orders .total .sum{ font-size:18px; font-weight:800; }
+
+.au-orders .au-btn{
+  appearance:none; border:1px solid var(--border); background:rgba(255,255,255,.08);
+  color:var(--text); padding:9px 12px; border-radius:12px; cursor:pointer;
+  transition: transform .12s ease, box-shadow .15s ease, background .15s ease;
+}
+.au-orders .au-btn:hover{ transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,.2); }
+.au-orders .au-btn.ghost{ background:transparent; }
+
+/* TABLE */
+.au-orders .order-body{ display:none; }
+.au-orders .order-body.open{ display:block; }
+
+/* ✅ تثبيت عرض الأعمدة وضمان أن القيم تحت العناوين */
+.au-orders .au-table{
+  width:100%;
+  border-collapse:collapse;
+  border-top:1px solid var(--border);
+  table-layout: fixed;                 /* <-- مهم */
+}
+.au-orders .au-table th, .au-orders .au-table td{
+  padding:12px 10px; border-bottom:1px solid var(--border);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.au-orders .au-table th{ text-align:left; color:var(--muted); font-weight:600; font-size:13px; }
+.au-orders .t-right{text-align:right;} .au-orders .t-center{text-align:center;}
+.au-orders .t-product{ display:flex; align-items:center; gap:12px; min-width:0; }
+
+/* ✅ أعرض المنتج أكبر والباقي بنِسَب ثابتة */
+.au-orders .au-table th:nth-child(1), .au-orders .au-table td:nth-child(1){ width:52%; }
+.au-orders .au-table th:nth-child(2), .au-orders .au-table td:nth-child(2){ width:10%; text-align:center; }
+.au-orders .au-table th:nth-child(3), .au-orders .au-table td:nth-child(3){ width:16%; text-align:right; }
+.au-orders .au-table th:nth-child(4), .au-orders .au-table td:nth-child(4){ width:10%; text-align:right; }
+.au-orders .au-table th:nth-child(5), .au-orders .au-table td:nth-child(5){ width:12%; text-align:right; }
+
+/* اسم المنتج يقبل ellipsis بدون تغيير JSX */
+.au-orders .t-product span:last-child{
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
+.au-orders .img-ph{
+  width:40px; height:40px; border-radius:6px; background:rgba(255,255,255,.08); border:1px solid var(--border);
+}
+
+/* ORDER SUMMARY (foot) */
+.au-orders .order-summary{ margin-top:10px; border-top:1px dashed var(--border); padding-top:10px; }
+.au-orders .order-summary .row{ display:flex; align-items:center; justify-content:space-between; padding:6px 0; }
+.au-orders .order-summary .total span:last-child{ font-size:18px; font-weight:800; }
+
+/* EMPTY & SKELETON */
+.au-orders .au-empty-card{ text-align:center; padding:24px; }
+.au-orders .empty-title{ font-size:18px; font-weight:800; margin-bottom:6px; }
+.au-orders .empty-sub{ color:var(--muted); }
+.au-orders .au-skeleton-list{ display:grid; gap:10px; }
+.au-orders .au-skeleton{
+  height:72px; border-radius:14px;
+  background:linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.12), rgba(255,255,255,.06));
+  animation: au-shine 1.2s linear infinite; background-size:200% 100%;
+}
+
+/* 📱 موبايل: تمرير أفقي بدل ما يتكسّر الجدول */
+@media (max-width: 720px){
+  .au-orders .order-body{ overflow-x:auto; }
+  .au-orders .au-table{ min-width:720px; }
+}

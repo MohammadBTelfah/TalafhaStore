@@ -31,7 +31,12 @@
   font-size: 25px;
   font-weight: 500;
   position: relative;
+  color: #333;              /* نص غامق على كارد أبيض */
+  text-align: center;       /* اختياري */
+  margin-bottom: 10px;      /* اختياري */
 }
+
+
 
 .container .title::before {
   content: "";

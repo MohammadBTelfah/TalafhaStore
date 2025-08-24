@@ -13,4 +13,7 @@ router.get('/my-orders', auth, OrderController.getAllOrders);
 // ✅ Get all orders for admin
 router.get('/admin/orders', AdminAuth, OrderController.getAllOrdersAdmin);
 
+router.patch('/admin/orders/:id/status', AdminAuth, OrderController.updateOrderStatus);
+
+
 module.exports = router;
