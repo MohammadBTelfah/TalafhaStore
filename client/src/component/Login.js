@@ -5,6 +5,9 @@ import { FcGoogle } from 'react-icons/fc';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import axios from 'axios';
 
+// ⬅️ قاعدة الـ API من env (CRA)
+const API_BASE = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5002';
+
 export default function LoginForm() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -19,10 +22,15 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5002/api/users/login', formData);
+      const res = await axios.post(`${API_BASE}/api/users/login`, formData, {
+        // لو بتستخدم كوكيز على الدومين نفسه فعّل السطر التالي
+        // withCredentials: true,
+      });
+
       localStorage.setItem('token', res.data.token);
-const userRole = res.data.role || (res.data.user && res.data.user.role) || 'user';
-localStorage.setItem('role', userRole);
+      const userRole = res.data.role || (res.data.user && res.data.user.role) || 'user';
+      localStorage.setItem('role', userRole);
+
       setSuccess(true);
       setTimeout(() => {
         const role = res.data.role || res.data.user?.role;
@@ -30,14 +38,14 @@ localStorage.setItem('role', userRole);
       }, 2500);
     } catch (err) {
       console.error('Login error:', err.response?.data?.message || err.message);
-      setErrorMessage('Password is not correct');
+      setErrorMessage(err.response?.data?.message || 'Password is not correct');
       setShake(true);
       setTimeout(() => setShake(false), 500);
     }
   };
 
   const handleGoogleLogin = () => {
-    window.open('http://localhost:5002/api/users/google', '_self');
+    window.open(`${API_BASE}/api/users/google`, '_self');
   };
 
   return (
@@ -83,9 +91,8 @@ localStorage.setItem('role', userRole);
           </div>
 
           <Link to="/forgot-password" className="forgot-password-link">
-           Forgot password?
+            Forgot password?
           </Link>
-
 
           <div className="button">
             <input type="submit" value="Login" />

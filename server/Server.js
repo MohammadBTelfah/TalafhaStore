@@ -22,9 +22,13 @@ const PORT = process.env.PORT || 5002;
 
 // ✅ CORS config
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',              // للتجارب محلي
+    'https://talafha-store.vercel.app'    // للإنتاج على Vercel
+  ],
   credentials: true
 }));
+
 
 // ✅ جلسة المستخدم (ضروري لـ passport)
 app.use(session({

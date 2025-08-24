@@ -14,7 +14,7 @@ export function Category() {
   // Get all categories
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:5002/api/categories/getAll');
+      const response = await axios.get('https://talafhastore.onrender.com/api/categories/getAll');
       setRows(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -31,7 +31,7 @@ export function Category() {
     e.preventDefault();
     try {
       const newRow = { name };
-      await axios.post('http://127.0.0.1:5002/api/categories/create', newRow, {
+      await axios.post('https://talafhastore.onrender.com/api/categories/create', newRow, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -48,7 +48,7 @@ export function Category() {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this category?')) return;
     try {
-      await axios.delete(`http://127.0.0.1:5002/api/categories/delete/${id}`, {
+      await axios.delete(`https://talafhastore.onrender.com/api/categories/delete/${id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -73,7 +73,7 @@ export function Category() {
     }
 
     try {
-      await axios.put(`http://127.0.0.1:5002/api/categories/update/${id}`, { name: editName }, {
+      await axios.put(`https://talafhastore.onrender.com/api/categories/update/${id}`, { name: editName }, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

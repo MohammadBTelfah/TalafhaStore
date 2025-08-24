@@ -6,6 +6,7 @@ const multer = require('multer');
 const userController = require('../Controllers/userController');
 const auth = require('../middleware/authMiddleware');
 const AdminAuth = require('../middleware/adminAuth');
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // إعدادات رفع الصور
 const storage = multer.diskStorage({
@@ -53,28 +54,31 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 
 // 2. بعد المصادقة، استلام البيانات والرد
 // بعد المصادقة
-router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login' }),
+router.get(
+  '/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: `${FRONTEND_URL}/login`,
+    session: false, // اختياري إذا ما بتستخدم جلسات
+  }),
   async (req, res) => {
     try {
       const jwt = require('jsonwebtoken');
-      const jwtToken = jwt.sign(
-        { id: req.user._id, role: req.user.role }, // ✅ ضفنا الدور داخل التوكن أيضاً
-        process.env.JWT_SECRET || 'your_jwt_secret',
+      const token = jwt.sign(
+        { id: req.user._id, role: req.user.role },
+        process.env.JWT_SECRET,
         { expiresIn: '1d' }
       );
 
       const role = req.user.role || 'user';
-
-      // ✅ إعادة التوجيه مع التوكن والدور
-      const redirectURL = `http://localhost:3000/oauth-success?token=${jwtToken}&role=${role}`;
-      res.redirect(redirectURL);
+      // وجه للفرونت (Vercel بالإنتاج)
+      res.redirect(`${FRONTEND_URL}/oauth-success?token=${encodeURIComponent(token)}&role=${role}`);
     } catch (err) {
       console.error('🔴 Redirect error after Google login:', err);
-      res.redirect('http://localhost:3000/login');
+      res.redirect(`${FRONTEND_URL}/login`);
     }
   }
 );
+
 
 
 module.exports = router;

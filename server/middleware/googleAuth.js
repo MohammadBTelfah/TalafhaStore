@@ -6,12 +6,18 @@ const fs = require('fs');
 const axios = require('axios');
 const path = require('path');
 
+// 👇 خليه يقرأ من env: على المحلي = http://localhost:5002
+// على Render = https://talafhastore.onrender.com (تحطها في Settings → Environment)
+const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL || 'http://localhost:5002';
+
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: 'http://localhost:5002/api/users/google/callback',
+
+      // 👈 التعديل المهم
+      callbackURL: `${BACKEND_BASE_URL}/api/users/google/callback`,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -20,7 +26,6 @@ passport.use(
 
         let user = await User.findOne({ email });
 
-        // ✅ لو المستخدم غير موجود
         if (!user) {
           const hashedPassword = await bcrypt.hash('GOOGLE_AUTH', 10);
 
@@ -30,10 +35,8 @@ passport.use(
               const response = await axios.get(photoUrl, { responseType: 'arraybuffer' });
               const buffer = Buffer.from(response.data, 'binary');
               const fileName = `${profile.id}.jpg`;
-
               const uploadPath = path.join(__dirname, '..', 'uploads', fileName);
               fs.writeFileSync(uploadPath, buffer);
-
               savedFileName = fileName;
             } catch (err) {
               console.error('❌ Failed to save Google profile image:', err.message);
@@ -41,7 +44,7 @@ passport.use(
           }
 
           user = await User.create({
-            username: profile.displayName?.toLowerCase().replace(/\s+/g, '') || 'googleuser',
+            username: (profile.displayName || 'googleuser').toLowerCase().replace(/\s+/g, ''),
             email,
             password: hashedPassword,
             phone: '0000000000',
@@ -51,7 +54,6 @@ passport.use(
             verified: true,
           });
         } else {
-          // ✅ لو المستخدم موجود مسبقًا
           let updated = false;
 
           if ((!user.profileImage || user.profileImage === '') && photoUrl) {
@@ -59,10 +61,8 @@ passport.use(
               const response = await axios.get(photoUrl, { responseType: 'arraybuffer' });
               const buffer = Buffer.from(response.data, 'binary');
               const fileName = `${profile.id}.jpg`;
-
               const uploadPath = path.join(__dirname, '..', 'uploads', fileName);
               fs.writeFileSync(uploadPath, buffer);
-
               user.profileImage = fileName;
               updated = true;
             } catch (err) {
@@ -70,11 +70,7 @@ passport.use(
             }
           }
 
-          if (!user.verified) {
-            user.verified = true;
-            updated = true;
-          }
-
+          if (!user.verified) { user.verified = true; updated = true; }
           if (updated) await user.save();
         }
 
@@ -87,18 +83,9 @@ passport.use(
   )
 );
 
-// ✅ جلسة المستخدم
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
+passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (err) {
-    done(err, null);
-  }
+  try { done(null, await User.findById(id)); } catch (err) { done(err, null); }
 });
 
 module.exports = passport;
