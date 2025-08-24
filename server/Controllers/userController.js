@@ -44,28 +44,33 @@ exports.register = async (req, res) => {
     });
 
     // ✅ إنشاء توكن التحقق
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
+   // ✅ إنشاء توكن التحقق
+const token = jwt.sign(
+  { id: user._id },
+  process.env.JWT_SECRET,
+  { expiresIn: '1d' }
+);
 
-    user.verifyToken = token;
-    await user.save();
+user.verifyToken = token;
+await user.save();
 
-    // ✅ إرسال إيميل التفعيل
-    const verificationUrl = `http://localhost:3000/verify-email?token=${token}`;
-    const html = `
-      <h2>Verify your email</h2>
-      <p>Click the link below to verify your account:</p>
-      <a href="${verificationUrl}">${verificationUrl}</a>
-    `;
+// ✅ تحديد رابط الموقع من env أو fallback
+const clientURL = process.env.CLIENT_URL || "http://localhost:3000";
 
-    await sendEmail({
-      to: user.email,
-      subject: 'Verify your email - TalafhaStore',
-      html,
-    });
+// ✅ إنشاء رابط التفعيل
+const verificationUrl = `${clientURL}/verify-email?token=${token}`;
+
+const html = `
+  <h2>Verify your email</h2>
+  <p>Click the link below to verify your account:</p>
+  <a href="${verificationUrl}">${verificationUrl}</a>
+`;
+
+await sendEmail({
+  to: user.email,
+  subject: 'Verify your email - TalafhaStore',
+  html,
+});
 
     // ✅ الرد
     res.status(201).json({
@@ -239,13 +244,14 @@ exports.requestPasswordReset = async (req, res) => {
 
     const user = await User.findOne({ email });
 
-    // ✅ لا تكشف أن الإيميل موجود أو لا
+    // ✅ ما تكشف إذا الإيميل موجود أو لا
     if (!user) {
       return res.status(200).json({
         message: "If this email exists, a reset link will be sent.",
       });
     }
 
+    // ✅ أنشئ توكن قصير العمر
     const resetToken = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET || "your_jwt_secret",
@@ -253,11 +259,12 @@ exports.requestPasswordReset = async (req, res) => {
     );
 
     user.resetToken = resetToken;
-    user.resetTokenExpiry = Date.now() + 15 * 60 * 1000;
-
+    user.resetTokenExpiry = Date.now() + 15 * 60 * 1000; // 15 دقيقة
     await user.save();
 
-    const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+    // ✅ خذ الرابط من env
+    const clientURL = process.env.CLIENT_URL || "http://localhost:3000";
+    const resetLink = `${clientURL}/reset-password?token=${resetToken}`;
 
     const message = `
       <h3>Reset Your Password</h3>
@@ -266,16 +273,21 @@ exports.requestPasswordReset = async (req, res) => {
       <p>This link will expire in 15 minutes.</p>
     `;
 
-await sendEmail({
-  to: user.email,
-  subject: "Password Reset",
-  html: message
-});
+    await sendEmail({
+      to: user.email,
+      subject: "Password Reset - TalafhaStore",
+      html: message,
+    });
 
-    res.status(200).json({ message: "If this email exists, a reset link will be sent." });
-
+    res.status(200).json({
+      message: "If this email exists, a reset link will be sent.",
+    });
   } catch (err) {
-    res.status(500).json({ message: "Error requesting password reset", error: err.message });
+    console.error(err);
+    res.status(500).json({
+      message: "Error requesting password reset",
+      error: err.message,
+    });
   }
 };
 
@@ -406,39 +418,64 @@ exports.googleLogin = async (req, res) => {
 
 exports.googleCallback = async (req, res) => {
   try {
-    const { displayName, emails, photos } = req.user;
-    const email = emails[0].value;
-    const picture = photos?.[0]?.value || '';
+    const { displayName = '', emails = [], photos = [] } = req.user || {};
+    const email = emails[0]?.value;
+    const picture = photos[0]?.value || '';
+
+    if (!email) {
+      return res.status(400).json({ message: 'Google account has no email' });
+    }
 
     let user = await User.findOne({ email });
 
     if (!user) {
+      // اسم مستخدم مقصوص ومبسّط
+      const baseUsername = displayName.toLowerCase().replace(/\s+/g, '') || email.split('@')[0];
+      let username = baseUsername;
+      let n = 1;
+      while (await User.findOne({ username })) {
+        username = `${baseUsername}${n++}`;
+      }
+
       user = new User({
-        username: displayName.toLowerCase().replace(/\s+/g, ''),
+        username,
         email,
-        firstName: displayName.split(' ')[0],
+        firstName: displayName.split(' ')[0] || '',
         lastName: displayName.split(' ')[1] || '',
         profileImage: picture,
         role: 'user',
-        password: 'GoogleOAuthUser',
+        password: 'GoogleOAuthUser',   // مش مستخدم فعليًا للتسجيل بالدخول
         verified: true
       });
 
       await user.save();
-    } 
-    // ✅ فعّل المستخدم إذا لم يكن مفعل
-    else if (!user.verified || !user.profileImage) {
-      user.verified = true;
-      if (!user.profileImage) user.profileImage = picture;
-      await user.save();
+    } else {
+      // فعّل وحسّن البروفايل لو ناقص
+      let changed = false;
+      if (!user.verified) { user.verified = true; changed = true; }
+      if (!user.profileImage && picture) { user.profileImage = picture; changed = true; }
+      if (changed) await user.save();
     }
 
-const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
-    res.redirect(`http://localhost:3000/google-success?token=${token}&role=${user.role}&name=${user.firstName}`);
+    // استخدم عنوان الفرونت من env
+    const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+
+    // مهم ترميز القيم
+    const redirectUrl = `${CLIENT_URL}/google-success` +
+      `?token=${encodeURIComponent(token)}` +
+      `&role=${encodeURIComponent(user.role)}` +
+      `&name=${encodeURIComponent(user.firstName || '')}`;
+
+    return res.redirect(redirectUrl);
   } catch (error) {
     console.error('Google login error:', error);
-    res.status(500).json({ message: 'Google login failed' });
+    return res.status(500).json({ message: 'Google login failed' });
   }
 };
 
