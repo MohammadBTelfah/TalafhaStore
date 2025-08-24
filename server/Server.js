@@ -23,10 +23,13 @@ const PORT = process.env.PORT || 5002;
 // ✅ CORS config
 app.use(cors({
   origin: [
-    'http://localhost:3000',              // للتجارب محلي
-    'https://talafha-store.vercel.app'    // للإنتاج على Vercel
+    'http://localhost:3000',
+    /\.vercel\.app$/,     // أي دومين بينتهي بـ vercel.app
+    'https://talafha-store.vercel.app'
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization']
 }));
 
 
