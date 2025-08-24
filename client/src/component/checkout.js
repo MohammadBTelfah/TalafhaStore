@@ -3,6 +3,10 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import "../styles/Checkout.css";
 
+// 👇 استخدم متغيّر البيئة أو الدومين المباشر في الإنتاج
+const API_BASE =
+  process.env.REACT_APP_API_URL || "https://talafhastore.onrender.com";
+
 export default function Checkout({
   darkMode = true,
   token = localStorage.getItem("token") || "",
@@ -55,10 +59,9 @@ export default function Checkout({
     try {
       window.dispatchEvent(new CustomEvent("cart:count", { detail: count }));
     } catch {}
-    patchCartBadgeDom(count); // DOM fallback (in case header doesn't listen to event/props)
+    patchCartBadgeDom(count); // DOM fallback
   };
 
-  // Imperative fallback for headers that don't subscribe to events/props
   const patchCartBadgeDom = (count) => {
     const badge =
       document.querySelector("[data-cart-badge]") ||
@@ -134,7 +137,7 @@ export default function Checkout({
 
   /* ---------------- load cart ---------------- */
   const refreshCart = async () => {
-    const res = await axios.get("http://127.0.0.1:5002/api/cart/get-cart", {
+    const res = await axios.get(`${API_BASE}/api/cart/get-cart`, {
       headers: authHeader,
     });
     const data = res?.data || {};
@@ -189,7 +192,7 @@ export default function Checkout({
   const nextDisabled = () => {
     if (step === 1) return !cart.length;
     if (step === 2) {
-      if (paymentMethod === "cash") return false; // hide & skip card checks
+      if (paymentMethod === "cash") return false;
       return (
         !cardNumber ||
         !expiry ||
@@ -261,7 +264,7 @@ export default function Checkout({
 
     submittingRef.current = true;
 
-    // optimistic: hide badge immediately
+    // optimistic badge
     const currentCount = cart.reduce((a, it) => a + it.qty, 0);
     lastCountRef.current = currentCount;
     setCartCount(0);
@@ -270,7 +273,7 @@ export default function Checkout({
     setStage("processing");
     try {
       await axios.post(
-        "http://127.0.0.1:5002/api/orders/place-order",
+        `${API_BASE}/api/orders/place-order`,
         {
           shippingAddress: formatShipping(ship, note),
           paymentMethod,
@@ -281,7 +284,6 @@ export default function Checkout({
       markSuccessUI();
     } catch (e) {
       console.error(e?.response?.data || e);
-      // Fallback: check the cart — if server already placed the order & cleared cart, treat as success
       try {
         const remaining = await refreshCart();
         if (remaining === 0) {
@@ -291,13 +293,11 @@ export default function Checkout({
         }
       } catch {}
 
-      // rollback badge & stage on real failure
       setCartCount(lastCountRef.current);
       broadcastCartCount(lastCountRef.current);
       setStage("idle");
       alert(
-        e?.response?.data?.message ||
-          "Server error placing order"
+        e?.response?.data?.message || "Server error placing order"
       );
     }
     submittingRef.current = false;
@@ -379,7 +379,7 @@ export default function Checkout({
                           <td className="t-product">
                             {prod.prodImage ? (
                               <img
-                                src={`http://localhost:5002/uploads/${prod.prodImage}`}
+                                src={`${API_BASE}/uploads/${prod.prodImage}`}
                                 alt="prod"
                                 width="40"
                                 style={{ borderRadius: "6px" }}
@@ -458,7 +458,6 @@ export default function Checkout({
               <div className="au-card">
                 <h2 className="au-h2">Payment Details</h2>
 
-                {/* hide card UI when cash */}
                 {paymentMethod === "card" && (
                   <>
                     <div className={`au-card-preview ${showBack ? "is-back" : ""}`}>
@@ -545,7 +544,6 @@ export default function Checkout({
                   </>
                 )}
 
-                {/* Payment method radios */}
                 <div className="au-row-2" style={{ marginTop: 8 }}>
                   <label className="au-label" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <input
@@ -600,7 +598,6 @@ export default function Checkout({
           {/* STEP 3: SHIPPING */}
           {step === 3 && (
             <section className="au-grid">
-              {/* LEFT: shipping form */}
               <div className="au-card">
                 <h2 className="au-h2">Shipping Details</h2>
                 <div className="au-form">
@@ -745,7 +742,6 @@ export default function Checkout({
                 </div>
               </div>
 
-              {/* RIGHT: summary + Place Order */}
               <div className="au-card">
                 <h3 className="au-h3">Order Summary</h3>
                 <div className="au-items" style={{ marginBottom: 10 }}>
@@ -753,7 +749,7 @@ export default function Checkout({
                     <div key={prod.id} className="au-item">
                       {prod.prodImage ? (
                         <img
-                          src={`http://localhost:5002/uploads/${prod.prodImage}`}
+                          src={`${API_BASE}/uploads/${prod.prodImage}`}
                           alt="prod"
                           width="40"
                           style={{ borderRadius: "6px" }}
@@ -827,7 +823,6 @@ export default function Checkout({
         </div>
       </div>
 
-      {/* Overlay */}
       {stage !== "idle" && (
         <div className="au-overlay">
           <div className="au-modal">

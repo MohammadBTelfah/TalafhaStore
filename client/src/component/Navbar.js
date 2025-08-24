@@ -13,6 +13,8 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
+const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
+
 const GRAD = "linear-gradient(135deg, #71b7e6, #9b59b6)";
 
 const Brand = styled(Typography)({
@@ -106,121 +108,96 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
   };
 
   const fetchCart = async () => {
-  if (!token) { setCartItems([]); setCartCount(0); return; }
-  try {
-    const res = await axios.get("http://127.0.0.1:5002/api/cart/get-cart", { headers: authHeader });
-    const data = res.data || {};
-    const items = Array.isArray(data.items)
-      ? data.items
-      : (Array.isArray(data?.cart?.items) ? data.cart.items : []);
-    setCartItems(items);
-    setCartCount(items.reduce((s, it) => s + Number(it.quantity || 0), 0));
-  } catch {
-    setCartItems([]); setCartCount(0);
-  }
-};
+    if (!token) { setCartItems([]); setCartCount(0); return; }
+    try {
+      const res = await axios.get(`${API_BASE}/api/cart/get-cart`, { headers: authHeader });
+      const data = res.data || {};
+      const items = Array.isArray(data.items)
+        ? data.items
+        : (Array.isArray(data?.cart?.items) ? data.cart.items : []);
+      setCartItems(items);
+      setCartCount(items.reduce((s, it) => s + Number(it.quantity || 0), 0));
+    } catch {
+      setCartItems([]); setCartCount(0);
+    }
+  };
 
- const changeQty = async (productId, change) => {
-  if (!token) return;
+  const changeQty = async (productId, change) => {
+    if (!token) return;
 
-  const current = cartItems.find(it => it.product._id === productId)?.quantity || 0;
-  const nextQty = current + change;
+    const current = cartItems.find(it => it.product._id === productId)?.quantity || 0;
+    const nextQty = current + change;
 
-  try {
-    if (change > 0) {
-      await axios.post(
-        "http://127.0.0.1:5002/api/cart/add-to-cart",
-        { productId, quantity: 1 },
-        { headers: authHeader }
-      );
-
-      setCartItems(prev =>
-        prev.map(it =>
-          it.product._id === productId ? { ...it, quantity: it.quantity + 1 } : it
-        )
-      );
-      setCartCount(c => c + 1);
-
-    } else {
-      if (nextQty <= 0) {
-        await axios.delete("http://127.0.0.1:5002/api/cart/remove-from-cart", {
-          headers: authHeader,
-          data: { productId },
-        });
-
-        setCartItems(prev => prev.filter(it => it.product._id !== productId));
-        setCartCount(c => Math.max(0, c - current));
-      } else {
-        await axios.delete("http://127.0.0.1:5002/api/cart/remove-from-cart", {
-          headers: authHeader,
-          data: { productId },
-        });
-
-        await axios.post(
-          "http://127.0.0.1:5002/api/cart/add-to-cart",
-          { productId, quantity: nextQty },
-          { headers: authHeader }
-        );
-
+    try {
+      if (change > 0) {
+        await axios.post(`${API_BASE}/api/cart/add-to-cart`, { productId, quantity: 1 }, { headers: authHeader });
         setCartItems(prev =>
           prev.map(it =>
-            it.product._id === productId ? { ...it, quantity: nextQty } : it
+            it.product._id === productId ? { ...it, quantity: it.quantity + 1 } : it
           )
         );
-setCartCount(c => c + change);
+        setCartCount(c => c + 1);
+
+      } else {
+        if (nextQty <= 0) {
+          await axios.delete(`${API_BASE}/api/cart/remove-from-cart`, { headers: authHeader, data: { productId } });
+          setCartItems(prev => prev.filter(it => it.product._id !== productId));
+          setCartCount(c => Math.max(0, c - current));
+        } else {
+          await axios.delete(`${API_BASE}/api/cart/remove-from-cart`, { headers: authHeader, data: { productId } });
+          await axios.post(`${API_BASE}/api/cart/add-to-cart`, { productId, quantity: nextQty }, { headers: authHeader });
+
+          setCartItems(prev =>
+            prev.map(it =>
+              it.product._id === productId ? { ...it, quantity: nextQty } : it
+            )
+          );
+          setCartCount(c => c + change);
+        }
       }
+    } catch (e) {
+      console.error(e?.response?.data || e);
+      fetchCart();
     }
-  } catch (e) {
-    console.error(e?.response?.data || e);
-    fetchCart();
-  }
-};
-
-
+  };
 
   const removeItem = async (item) => {
-  if (!token) return;
-  try {
-    await axios.delete("http://127.0.0.1:5002/api/cart/remove-from-cart", {
-      headers: authHeader,
-      data: { productId: item.product._id },
-    });
-
-    setCartItems(prev => prev.filter(it => it.product._id !== item.product._id));
-    setCartCount(c => Math.max(0, c - Number(item.quantity || 0)));
-  } catch (e) {
-    console.error(e?.response?.data || e);
-    fetchCart();
-  }
-};
-const total = useMemo(() => {
-  if (!Array.isArray(cartItems)) return 0;
-  return cartItems.reduce((sum, it) => {
-    const price = Number(it?.product?.prodPrice || 0);
-    const qty   = Number(it?.quantity || 0);
-    return sum + price * qty;
-  }, 0);
-}, [cartItems]);
-useEffect(() => {
-  const onCartDelta = (e) => {
-    const delta = Number(e?.detail?.delta || 0);
-    if (!delta) return;
-    setCartCount((c) => Math.max(0, c + delta));
-    if (cartOpen) fetchCart();
+    if (!token) return;
+    try {
+      await axios.delete(`${API_BASE}/api/cart/remove-from-cart`, { headers: authHeader, data: { productId: item.product._id } });
+      setCartItems(prev => prev.filter(it => it.product._id !== item.product._id));
+      setCartCount(c => Math.max(0, c - Number(item.quantity || 0)));
+    } catch (e) {
+      console.error(e?.response?.data || e);
+      fetchCart();
+    }
   };
-  window.addEventListener("cart:delta", onCartDelta);
-  return () => window.removeEventListener("cart:delta", onCartDelta);
-}, [cartOpen]);
 
+  const total = useMemo(() => {
+    if (!Array.isArray(cartItems)) return 0;
+    return cartItems.reduce((sum, it) => {
+      const price = Number(it?.product?.prodPrice || 0);
+      const qty   = Number(it?.quantity || 0);
+      return sum + price * qty;
+    }, 0);
+  }, [cartItems]);
 
-  
+  useEffect(() => {
+    const onCartDelta = (e) => {
+      const delta = Number(e?.detail?.delta || 0);
+      if (!delta) return;
+      setCartCount((c) => Math.max(0, c + delta));
+      if (cartOpen) fetchCart();
+    };
+    window.addEventListener("cart:delta", onCartDelta);
+    return () => window.removeEventListener("cart:delta", onCartDelta);
+  }, [cartOpen]);
+
   useEffect(() => {
     const run = async () => {
       if (!token) { resetAuthState(); return; }
       try {
-        const res = await axios.get("http://127.0.0.1:5002/api/users/profile", {
-          headers: authHeader,
-        });
+        const res = await axios.get(`${API_BASE}/api/users/profile`, { headers: authHeader });
         setUser(res.data);
         fetchCart();
       } catch {
@@ -228,7 +205,7 @@ useEffect(() => {
       }
     };
     run();
-  }, [token]);
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setToken(cleanToken(localStorage.getItem("token")));
@@ -270,7 +247,7 @@ useEffect(() => {
               mx: "auto",
               width: "100%",
               display: "grid",
-              gridTemplateColumns: "1fr auto 1fr", 
+              gridTemplateColumns: "1fr auto 1fr",
               alignItems: "center",
               gap: 1,
               color: textColor,
@@ -324,11 +301,11 @@ useEffect(() => {
                 {isDark ? <FiSun/> : <FiMoon/>}
               </IconButton>
 
-<IconButton
-  onClick={() => { fetchCart(); setCartOpen(true); }}
-  sx={{ color: textColor }}
-  aria-label="cart"
->
+              <IconButton
+                onClick={() => { fetchCart(); setCartOpen(true); }}
+                sx={{ color: textColor }}
+                aria-label="cart"
+              >
                 <Badge badgeContent={cartCount} color="primary">
                   <FiShoppingCart />
                 </Badge>
@@ -340,7 +317,9 @@ useEffect(() => {
                     alt={user?.fullName || "Guest"}
                     src={
                       user?.profileImage
-                        ? `http://127.0.0.1:5002/uploads/${String(user.profileImage).replace(/\\/g,"/")}`
+                        ? (String(user.profileImage).startsWith("http")
+                            ? user.profileImage
+                            : `${API_BASE}/uploads/${String(user.profileImage).replace(/\\/g,"/")}`)
                         : undefined
                     }
                     sx={{
@@ -443,33 +422,33 @@ useEffect(() => {
                 <List>
                   {cartItems.map((item) => (
                     <ListItem key={item.product._id} alignItems="flex-start" sx={{ py: 1 }}>
-<ListItemAvatar sx={{ minWidth: 72 }}>
-  <MUIAvatar
-    variant="rounded"
-    alt={item.product.prodName}
-    src={`http://127.0.0.1:5002/uploads/${String(item.product.prodImage).replace(/\\/g,"/")}`}
-    sx={{
-      width: 64,
-      height: 64,
-      borderRadius: 2,
-      bgcolor: "#0e101a",
-      border: "1px solid rgba(255,255,255,.18)",
-      boxShadow: "0 2px 10px rgba(0,0,0,.25)",
-      overflow: "hidden",
-      "& img": {
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-        display: "block"
-      }
-    }}
-  />
-</ListItemAvatar>
+                      <ListItemAvatar sx={{ minWidth: 72 }}>
+                        <MUIAvatar
+                          variant="rounded"
+                          alt={item.product.prodName}
+                          src={`${API_BASE}/uploads/${String(item.product.prodImage).replace(/\\/g,"/")}`}
+                          sx={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: 2,
+                            bgcolor: "#0e101a",
+                            border: "1px solid rgba(255,255,255,.18)",
+                            boxShadow: "0 2px 10px rgba(0,0,0,.25)",
+                            overflow: "hidden",
+                            "& img": {
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block"
+                            }
+                          }}
+                        />
+                      </ListItemAvatar>
                       <ListItemText
-  primary={<Typography fontWeight="bold">{item.product.prodName}</Typography>}
+                        primary={<Typography fontWeight="bold">{item.product.prodName}</Typography>}
                         secondary={
-    <Box component="div" sx={{ color: isDark ? "#cfd3e0" : "#333" }}>
-      <Typography variant="body2">JD {item.product.prodPrice}</Typography>
+                          <Box component="div" sx={{ color: isDark ? "#cfd3e0" : "#333" }}>
+                            <Typography variant="body2">JD {item.product.prodPrice}</Typography>
                             <Box sx={{ display:"flex", alignItems:"center", mt:1 }}>
                               <QuantityButton onClick={()=>changeQty(item.product._id, -1)} disabled={item.quantity <= 1}><FiMinus/></QuantityButton>
                               <Typography sx={{ mx:1 }}>{item.quantity}</Typography>
@@ -487,26 +466,22 @@ useEffect(() => {
 
                 <Box sx={{ display:"flex", justifyContent:"space-between", mb:1 }}>
                   <Typography>Total:</Typography>
-<Box sx={{ display:"flex", justifyContent:"space-between", mb:1 }}>
-  <Typography>Total:</Typography>
-  <Typography fontWeight="bold">JD {Number(total || 0).toFixed(2)}</Typography>
-</Box>
+                  <Typography fontWeight="bold">JD {Number(total || 0).toFixed(2)}</Typography>
                 </Box>
 
-               <Button
-  variant="contained"
-  fullWidth
-  onClick={() => navigate("/checkout")} // 👈 بدل placeOrder
-  sx={{
-    mt: .5,
-    backgroundImage: GRAD,
-    color: "#0e1020",
-    fontWeight: 800
-  }}
->
-  Proceed to Checkout
-</Button>
-
+                <Button
+                  variant="contained"
+                  fullWidth
+                  onClick={() => navigate("/checkout")}
+                  sx={{
+                    mt: .5,
+                    backgroundImage: GRAD,
+                    color: "#0e1020",
+                    fontWeight: 800
+                  }}
+                >
+                  Proceed to Checkout
+                </Button>
               </>
             )}
           </Box>

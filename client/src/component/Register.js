@@ -5,6 +5,8 @@ import axios from 'axios';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 
 let debounceTimeout;
+const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
+
 
 export default function RegistrationForm() {
   const navigate = useNavigate();
@@ -34,11 +36,11 @@ export default function RegistrationForm() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const checkUsername = async (username) => {
+    const checkUsername = async (username) => {
     if (username.trim().length < 4) return;
 
     try {
-      const res = await axios.post('http://127.0.0.1:5002/api/users/check-username', { username });
+      const res = await axios.post(`${API_BASE}/api/users/check-username`, { username });
       setUsernameAvailable(res.data.available);
       setErrors(prev => ({
         ...prev,
@@ -48,6 +50,7 @@ export default function RegistrationForm() {
       console.error('Username check failed:', err);
     }
   };
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -119,8 +122,8 @@ export default function RegistrationForm() {
       data.append('profileImage', fileInputRef.current.files[0]);
     }
 
-    try {
-      await axios.post('http://127.0.0.1:5002/api/users/register', data);
+        try {
+      await axios.post(`${API_BASE}/api/users/register`, data);
       setSuccessMessage("Registration successful! Please check your email to verify your account.");
       setFormData({
         fullName: '',

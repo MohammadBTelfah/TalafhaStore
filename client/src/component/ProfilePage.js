@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import "../styles/ProfilePage.css";
 
+const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
+
 function toAbsoluteUrl(u) {
   if (!u) return "";
   let s = String(u).trim();
@@ -11,8 +13,9 @@ function toAbsoluteUrl(u) {
   if (idx >= 0) s = s.slice(idx);
   else if (!s.includes("/") || /\.[a-z0-9]+$/i.test(s)) s = `uploads/${s}`;
   s = s.replace(/^\/+/, "");
-  return `http://127.0.0.1:5002/${s}`;
+  return `${API_BASE}/${s}`;
 }
+
 
 function Field({
   label, name, type = "text",
@@ -86,10 +89,10 @@ export default function ProfilePage({ darkMode = false }) {
     current: false, next: false, confirm: false
   });
 
-  useEffect(() => {
+    useEffect(() => {
     setLoading(true);
     setError("");
-    axios.get("http://127.0.0.1:5002/api/users/profile", {
+    axios.get(`${API_BASE}/api/users/profile`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` }
     })
     .then((res) => {
@@ -136,8 +139,8 @@ export default function ProfilePage({ darkMode = false }) {
       form.append("phone", profile.phone);
       if (imageFile) form.append("profileImage", imageFile);
 
-      const res = await axios.put(
-        "http://127.0.0.1:5002/api/users/update-profile",
+           const res = await axios.put(
+        `${API_BASE}/api/users/update-profile`,
         form,
         {
           headers: {
@@ -169,7 +172,7 @@ export default function ProfilePage({ darkMode = false }) {
     }
   };
 
-  const submitPw = async (e) => {
+    const submitPw = async (e) => {
     e.preventDefault();
     if (pwForm.newPassword.length < 8) return setError("New password must be at least 8 characters.");
     if (pwForm.newPassword !== pwForm.confirmPassword) return setError("New password and confirmation do not match.");
@@ -177,7 +180,7 @@ export default function ProfilePage({ darkMode = false }) {
     setPwSaving(true); setError(""); setSuccess("");
     try {
       await axios.post(
-        "http://127.0.0.1:5002/api/users/change-password",
+        `${API_BASE}/api/users/change-password`,
         { currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` } }
       );
@@ -191,6 +194,8 @@ export default function ProfilePage({ darkMode = false }) {
       setPwSaving(false);
     }
   };
+
+
 
 const pageClass = `au-page au-profile${darkMode ? " au-dark" : ""}`;
 

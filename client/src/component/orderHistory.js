@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import "../styles/OrderHistory.css";
+const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
 
 export default function OrderHistory({
   darkMode = true,
@@ -95,10 +96,8 @@ export default function OrderHistory({
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(
-        "http://127.0.0.1:5002/api/orders/my-orders",
-        { headers: authHeader }
-      );
+       const res = await axios.get(`${API_BASE}/api/orders/my-orders`, { headers: authHeader });
+
       const raw = res?.data ?? [];
       const list =
         (Array.isArray(raw) ? raw : findOrderArrayDeep(raw)) || [];
@@ -241,12 +240,13 @@ export default function OrderHistory({
                         <tr key={prod.id}>
                           <td className="t-product">
                             {prod.prodImage ? (
-                              <img
-                                src={`http://localhost:5002/uploads/${prod.prodImage}`}
+                             <img
+                                src={`${API_BASE}/uploads/${prod.prodImage}`}
                                 alt="prod"
                                 width="40"
                                 style={{ borderRadius: "6px" }}
                               />
+
                             ) : (
                               <span className="img-ph" />
                             )}

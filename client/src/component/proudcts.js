@@ -4,8 +4,8 @@ import axios from "axios";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import "../styles/products.css";
 
-const API_BASE = "http://localhost:5002";
-const IMG_BASE = "http://localhost:5002/uploads";
+const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
+const IMG_BASE = `${API_BASE}/uploads`;
 
 export default function ProductsPage({ darkMode }) {
   const [products, setProducts] = useState([]);
@@ -139,7 +139,7 @@ export default function ProductsPage({ darkMode }) {
       }
       const quantity = Math.max(1, Number(qty) || 1);
       await axios.post(
-        "http://127.0.0.1:5002/api/cart/add-to-cart",
+        `${API_BASE}/api/cart/add-to-cart`,
         { productId: product._id, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -148,7 +148,7 @@ export default function ProductsPage({ darkMode }) {
         if (typeof window.onCartDelta === "function") window.onCartDelta(quantity);
         localStorage.setItem("__cart_delta_ping__", String(Date.now()));
       } catch {}
-      showSnack("proudct add sucsessfly", "success", 2200);
+      showSnack("Product added successfully", "success", 2200);
     } catch (e) {
       const msg = e?.response?.data?.message || e?.message || "Failed to add product";
       console.error("AddToCart error:", e?.response?.data || e);

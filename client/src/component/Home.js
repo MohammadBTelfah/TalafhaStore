@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Snackbar, Box } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 import "../styles/Home.css";
-import { useNavigate } from "react-router-dom";
 
-import axios from "axios";
+const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
+
 /* -------------------- Reveal-on-scroll hook -------------------- */
-
 function useReveal(options = { threshold: 0.15 }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -25,7 +26,23 @@ function useReveal(options = { threshold: 0.15 }) {
   }, [options]);
   return ref;
 }
+
 const dstyle = (i, step = 90) => ({ "--d": `${i * step}ms` });
+
+/* -------------------------- Helpers ------------------------------ */
+const currency = (n) =>
+  new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n ?? 0);
+
+function getImageUrl(fileName) {
+  if (!fileName) return "https://via.placeholder.com/400x300?text=No+Image";
+  return `${API_BASE}/uploads/${String(fileName).replace(/^\/+/, "")}`;
+}
+
+function scrollToId(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 /* -------------------------- Hero ------------------------------ */
 const slides = [
   {
@@ -49,6 +66,7 @@ const slides = [
     img: "https://www.shutterstock.com/image-photo/book-open-pages-close-up-600nw-2562942291.jpg"
   }
 ];
+
 function Hero() {
   const [index, setIndex] = useState(0);
   const timer = useRef(null);
@@ -58,7 +76,7 @@ function Hero() {
     timer.current = setInterval(() => setIndex((i) => (i + 1) % slides.length), 3500);
     return () => clearInterval(timer.current);
   }, []);
-  const current = slides[index];
+
   return (
     <section className="hero reveal" ref={ref}>
       <div className="hero-bg">
@@ -68,10 +86,11 @@ function Hero() {
       </div>
       <div className="hero-content">
         <h1 className="brand" data-reveal style={dstyle(0)}>Talafha</h1>
-        <p className="subtitle" data-reveal style={dstyle(1)}>{current.subtitle}</p>
+        <p className="subtitle" data-reveal style={dstyle(1)}>{slides[index].subtitle}</p>
         <div className="cta-row" data-reveal style={dstyle(2)}>
-          <a href="#featured" className="btn primary">Shop now</a>
-          <a href="#categories" className="btn ghost">Browse categories</a>
+          {/* سكرول داخلي بدل hash */}
+          <button className="btn primary" onClick={() => scrollToId("featured")}>Shop now</button>
+          <button className="btn ghost" onClick={() => scrollToId("categories")}>Browse categories</button>
         </div>
         <div className="hero-pills" aria-hidden data-reveal style={dstyle(3)}>
           {slides.map((_, i) => <span key={i} className={`pill ${i === index ? "active" : ""}`} />)}
@@ -80,6 +99,7 @@ function Hero() {
     </section>
   );
 }
+
 /* ------------------------- Tagline ----------------------------- */
 function Tagline() {
   const ref = useReveal();
@@ -91,37 +111,29 @@ function Tagline() {
     </section>
   );
 }
+
 /* --------------------- Featured Products ----------------------- */
-
-const currency = (n) =>
-  new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n ?? 0);
-
-function getImageUrl(fileName) {
-  if (!fileName) return "https://via.placeholder.com/400x300?text=No+Image";
-  return `http://127.0.0.1:5002/uploads/${fileName.replace(/^\/+/, "")}`;
-}
 function FeaturedProducts() {
-  
   const ref = useReveal();
-  const navigate = useNavigate();            // ✅ لازم هنا
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [snack, setSnack] = useState({ open: false, msg: "", severity: "success" });
-  const showSnack = (msg, severity = "success") => {
-    setSnack({ open: true, msg, severity });
-  };
+
+  const showSnack = (msg, severity = "success") => setSnack({ open: true, msg, severity });
+
   useEffect(() => {
     const src = axios.CancelToken.source();
     setLoading(true);
     setErr("");
 
     axios
-      .get("http://127.0.0.1:5002/api/products/featured", { cancelToken: src.token })
+      .get(`${API_BASE}/api/products/featured`, { cancelToken: src.token })
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
         const normalized = data.map((p) => ({
-          id: p._id,                         // ← نحفظه باسم id
+          id: p._id,
           name: p.prodName,
           price: p.prodPrice,
           img: getImageUrl(p.prodImage),
@@ -137,8 +149,7 @@ function FeaturedProducts() {
     return () => src.cancel("unmounted");
   }, []);
 
-  // ✅ Add to cart للهوم
-    const addToCart = async (productId, qty = 1) => {
+  const addToCart = async (productId, qty = 1) => {
     try {
       const raw = localStorage.getItem("token") || "";
       const token = raw.startsWith("Bearer ") ? raw.slice(7) : raw;
@@ -146,18 +157,14 @@ function FeaturedProducts() {
         showSnack("Please login first.", "error");
         return;
       }
-
       const quantity = Math.max(1, Number(qty) || 1);
       await axios.post(
-        "http://127.0.0.1:5002/api/cart/add-to-cart",
+        `${API_BASE}/api/cart/add-to-cart`,
         { productId, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      // 🔔 تحديت عداد السلة مباشرة
       window.dispatchEvent(new CustomEvent("cart:delta", { detail: { delta: quantity } }));
-
-showSnack("proudct add sucsessfly"); // نفس تهجئتك المطلوبة 🙂
+      showSnack("proudct add sucsessfly");
     } catch (e) {
       console.error("AddToCart (home) error:", e?.response?.data || e);
       showSnack("❌ Failed to add product", "error");
@@ -165,12 +172,11 @@ showSnack("proudct add sucsessfly"); // نفس تهجئتك المطلوبة �
   };
 
   return (
-       <section id="featured" className="section reveal" ref={ref}>
+    <section id="featured" className="section reveal" ref={ref}>
       <div className="section-head">
         <h2 data-reveal style={dstyle(0)}>Featured products</h2>
         <p data-reveal style={dstyle(1)}>Curated picks from Talafha — quality gear at friendly prices.</p>
       </div>
-
 
       {err && <div className="error" data-reveal style={dstyle(2)}>{err}</div>}
       {!loading && items.length === 0 && (
@@ -194,7 +200,7 @@ showSnack("proudct add sucsessfly"); // نفس تهجئتك المطلوبة �
             ))
           : items.map((p, i) => (
               <article className="card product" key={p.id} data-reveal style={dstyle(i)}>
-                <div className="thumb">
+                <div className="thumb" role="button" onClick={() => navigate(`/products?productId=${encodeURIComponent(p.id)}`)}>
                   <img
                     src={p.img}
                     alt={p.name}
@@ -208,135 +214,114 @@ showSnack("proudct add sucsessfly"); // نفس تهجئتك المطلوبة �
                   <p className="price">{currency(p.price)}</p>
 
                   <div className="btn-row">
-                    {/* ✅ Add to cart */}
                     <button className="btn cart" onClick={() => addToCart(p.id)}>Add to Cart</button>
-
-                    {/* ✅ كل منتج يروح لصفحة الـ products بــ id الخاص فيه */}
-                   <button
-                  className="btn details"
+                    <button
+                      className="btn details"
                       onClick={() => navigate(`/products?productId=${encodeURIComponent(p.id)}`)}
-                      >
-                     See Details
-                        </button>
-
+                    >
+                      See Details
+                    </button>
                   </div>
                 </div>
               </article>
             ))}
       </div>
-    <Snackbar
-  open={snack.open}
-  autoHideDuration={3000}
-  onClose={() => setSnack((s) => ({ ...s, open: false }))}
-  anchorOrigin={{ vertical: "top", horizontal: "center" }}
->
-  <Box
-    sx={{
-      bgcolor: "rgba(255,255,255,0.08)",
-      color: "#fff",
-      px: 2.5,
-      py: 1.75,
-      borderRadius: "18px",
-      backdropFilter: "blur(10px)",
-      WebkitBackdropFilter: "blur(10px)",
-      border: "1px solid rgba(255,255,255,0.20)",
-      boxShadow:
-        "0 10px 35px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)",
-      display: "flex",
-      alignItems: "center",
-      gap: 2,
-      minWidth: 320,
-      maxWidth: "min(92vw, 560px)",
-      position: "relative",
-      // لمسة توهج أخضر خفيف مثل الصورة
-      "&::after": {
-        content: '""',
-        position: "absolute",
-        inset: 0,
-        borderRadius: "18px",
-        boxShadow:
-          "0 0 0 1px rgba(34,197,94,.45), 0 0 28px rgba(34,197,94,.18) inset",
-        pointerEvents: "none",
-      },
-      fontWeight: 800,
-      fontSize: "1rem",
-      letterSpacing: ".2px",
-    }}
-  >
-    <span style={{ whiteSpace: "pre-line" }}>{snack.msg}</span>
 
-    <button
-      onClick={() => setSnack((s) => ({ ...s, open: false }))}
-      style={{
-        marginLeft: "auto",
-        width: 38,
-        height: 38,
-        borderRadius: 12,
-        background: "rgba(0,0,0,.35)",
-        color: "#fff",
-        border: "1px solid rgba(255,255,255,.28)",
-        display: "grid",
-        placeItems: "center",
-        cursor: "pointer",
-        outline: "none",
-      }}
-      aria-label="Close"
-      title="Close"
-    >
-      ✕
-    </button>
-  </Box>
-</Snackbar>
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={3000}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Box
+          sx={{
+            bgcolor: "rgba(255,255,255,0.08)",
+            color: "#fff",
+            px: 2.5,
+            py: 1.75,
+            borderRadius: "18px",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+            border: "1px solid rgba(255,255,255,0.20)",
+            boxShadow: "0 10px 35px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)",
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            minWidth: 320,
+            maxWidth: "min(92vw, 560px)",
+            position: "relative",
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              inset: 0,
+              borderRadius: "18px",
+              boxShadow: "0 0 0 1px rgba(34,197,94,.45), 0 0 28px rgba(34,197,94,.18) inset",
+              pointerEvents: "none",
+            },
+            fontWeight: 800,
+            fontSize: "1rem",
+            letterSpacing: ".2px",
+          }}
+        >
+          <span style={{ whiteSpace: "pre-line" }}>{snack.msg}</span>
+
+          <button
+            onClick={() => setSnack((s) => ({ ...s, open: false }))}
+            style={{
+              marginLeft: "auto",
+              width: 38,
+              height: 38,
+              borderRadius: 12,
+              background: "rgba(0,0,0,.35)",
+              color: "#fff",
+              border: "1px solid rgba(255,255,255,.28)",
+              display: "grid",
+              placeItems: "center",
+              cursor: "pointer",
+              outline: "none",
+            }}
+            aria-label="Close"
+            title="Close"
+          >
+            ✕
+          </button>
+        </Box>
+      </Snackbar>
     </section>
-    
   );
-  
 }
 
 /* -------------------------- Categories ------------------------- */
 const IMG_MAP = {
-  laptop:
-    "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1600&auto=format&fit=crop",
-  electronic:
-    "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1200&auto=format&fit=crop",
-  electronics:
-    "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1200&auto=format&fit=crop",
-  book:
-    "https://www.shutterstock.com/image-photo/book-open-pages-close-up-600nw-2562942291.jpg",
-  books:
-    "https://www.shutterstock.com/image-photo/book-open-pages-close-up-600nw-2562942291.jpg",
-  accessories:
-    "https://media.istockphoto.com/id/1170073824/photo/gamer-work-space-concept-top-view-a-gaming-gear-mouse-keyboard-joystick-headset-mobile.jpg?s=612x612&w=0&k=20&c=2d8z6CmJn6R1GaPpJ4HB4J43y4e0wOL4nusPM2Dhq34=",
-  accessrois:
-    "https://media.istockphoto.com/id/1170073824/photo/gamer-work-space-concept-top-view-a-gaming-gear-mouse-keyboard-joystick-headset-mobile.jpg?s=612x612&w=0&k=20&c=2d8z6CmJn6R1GaPpJ4HB4J43y4e0wOL4nusPM2Dhq34=",
-  men:
-    "https://cdn.shopify.com/s/files/1/2294/8559/files/A_Guide_To_Men_s_Summer_Clothing-01.jpg?v=1746471733",
-    games:
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCax-aU61KsvyTSQE-IBwMylLqX5LG8QCmdg&s",
-    sports:
-    "https://t4.ftcdn.net/jpg/05/53/86/01/360_F_553860129_ijFLSAeTvZ8Qpk8z4h9B9bzBKxWjrvUZ.jpg",
-    beauty:
-    "https://images.preview.ph/preview/resize/images/2021/12/22/preview-beauty-awards-skincare-nm.webp"
+  laptop: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1600&auto=format&fit=crop",
+  electronic: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1200&auto=format&fit=crop",
+  electronics: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1200&auto=format&fit=crop",
+  book: "https://www.shutterstock.com/image-photo/book-open-pages-close-up-600nw-2562942291.jpg",
+  books: "https://www.shutterstock.com/image-photo/book-open-pages-close-up-600nw-2562942291.jpg",
+  accessories: "https://media.istockphoto.com/id/1170073824/photo/gamer-work-space-concept-top-view-a-gaming-gear-mouse-keyboard-joystick-headset-mobile.jpg?s=612x612&w=0&k=20&c=2d8z6CmJn6R1GaPpJ4HB4J43y4e0wOL4nusPM2Dhq34=",
+  accessrois: "https://media.istockphoto.com/id/1170073824/photo/gamer-work-space-concept-top-view-a-gaming-gear-mouse-keyboard-joystick-headset-mobile.jpg?s=612x612&w=0&k=20&c=2d8z6CmJn6R1GaPpJ4HB4J43y4e0wOL4nusPM2Dhq34=",
+  men: "https://cdn.shopify.com/s/files/1/2294/8559/files/A_Guide_To_Men_s_Summer_Clothing-01.jpg?v=1746471733",
+  games: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCax-aU61KsvyTSQE-IBwMylLqX5LG8QCmdg&s",
+  sports: "https://t4.ftcdn.net/jpg/05/53/86/01/360_F_553860129_ijFLSAeTvZ8Qpk8z4h9B9bzBKxWjrvUZ.jpg",
+  beauty: "https://images.preview.ph/preview/resize/images/2021/12/22/preview-beauty-awards-skincare-nm.webp"
 };
 
 const imgFor = (name = "product") => {
   const key = String(name).toLowerCase().trim();
-  return (
-    IMG_MAP[key] ||
-    `https://source.unsplash.com/900x600/?${encodeURIComponent(key)},product`
-  );
+  return IMG_MAP[key] || `https://source.unsplash.com/900x600/?${encodeURIComponent(key)},product`;
 };
 
 function Categories() {
   const ref = useReveal();
+  const navigate = useNavigate();
   const [cats, setCats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("http://127.0.0.1:5002/api/categories/getAll");
-        const data = await res.json();
+        const res = await axios.get(`${API_BASE}/api/categories/getAll`);
+        const data = res.data;
         const list = Array.isArray(data) ? data : data?.categories || data?.data || [];
         setCats(list);
       } catch (e) {
@@ -358,14 +343,32 @@ function Categories() {
         {(loading ? Array.from({ length: 5 }) : cats).map((c, i) => {
           const name = loading ? "" : c?.name || "Category";
           const img = loading ? "" : imgFor(name);
+          const id = loading ? "" : (c?._id || name);
+
           return (
-            // eslint-disable-next-line jsx-a11y/anchor-is-valid
-            <a
+            <div
               className="card category"
               data-reveal
-              style={{ ...dstyle(i), position: "relative", overflow: "hidden", borderRadius: 16, height: 220, boxShadow: "0 18px 40px rgba(0,0,0,.25)", background: "#3b3f4a" }}
-href={loading ? "#" : `/products?category=${encodeURIComponent(c?._id || name)}`}
-              key={loading ? i : c?._id || name}
+              style={{
+                ...dstyle(i),
+                position: "relative",
+                overflow: "hidden",
+                borderRadius: 16,
+                height: 220,
+                boxShadow: "0 18px 40px rgba(0,0,0,.25)",
+                background: "#3b3f4a",
+                cursor: loading ? "default" : "pointer"
+              }}
+              role="link"
+              tabIndex={0}
+              onClick={() => !loading && navigate(`/products?category=${encodeURIComponent(id)}`)}
+              onKeyDown={(e) => {
+                if (!loading && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  navigate(`/products?category=${encodeURIComponent(id)}`);
+                }
+              }}
+              key={loading ? i : id}
             >
               {!loading && (
                 <>
@@ -389,7 +392,7 @@ href={loading ? "#" : `/products?category=${encodeURIComponent(c?._id || name)}`
                   </div>
                 </>
               )}
-            </a>
+            </div>
           );
         })}
       </div>
@@ -512,8 +515,10 @@ function FlashDeal() {
         >
           Ends in {d}d {h}h {m}m {sec}s
         </p>
-        <a
-          href="/deals"
+
+        {/* Link داخلي بدون ريفريش */}
+        <Link
+          to="/deals"
           style={{
             padding: "10px 22px",
             borderRadius: "12px",
@@ -529,27 +534,26 @@ function FlashDeal() {
           onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
         >
           Shop Deals
-        </a>
+        </Link>
       </div>
     </section>
   );
 }
+
 /* --------------------- Recently Viewed --------------------- */
 function RecentlyViewed() {
   const ref = useReveal();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem("recentProducts") || "[]";
       setItems(JSON.parse(raw));
-    } catch {  }
+    } catch {}
   }, []);
 
   if (items.length === 0) return null;
-
-  const currency = (n) =>
-    new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n ?? 0);
 
   return (
     <section id="recent" className="section reveal" ref={ref}>
@@ -560,16 +564,28 @@ function RecentlyViewed() {
       <div className="grid products">
         {items.slice(0, 6).map((p, i) => (
           <article className="card product" key={p.id} data-reveal style={dstyle(i)}>
-            <div className="thumb">
-              <img src={p.img} alt={p.name} loading="lazy"
-                   onError={(e)=>{e.currentTarget.src="https://via.placeholder.com/400x300?text=No+Image";}} />
+            <div
+              className="thumb"
+              role="button"
+              onClick={() => navigate(`/products?productId=${encodeURIComponent(p.id)}`)}
+            >
+              <img
+                src={p.img}
+                alt={p.name}
+                loading="lazy"
+                onError={(e)=>{e.currentTarget.src="https://via.placeholder.com/400x300?text=No+Image";}}
+              />
             </div>
             <div className="meta">
               <h3>{p.name}</h3>
               {p.price != null && <p className="price">{currency(p.price)}</p>}
               <div className="row">
-                <button className="btn small primary">Add to cart</button>
-                <button className="btn small ghost">View details</button>
+                <button className="btn small primary" onClick={() => navigate(`/products?productId=${encodeURIComponent(p.id)}`)}>
+                  Add to cart
+                </button>
+                <button className="btn small ghost" onClick={() => navigate(`/products?productId=${encodeURIComponent(p.id)}`)}>
+                  View details
+                </button>
               </div>
             </div>
           </article>
