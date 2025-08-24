@@ -160,6 +160,27 @@ select option:hover {
 }
 
 @media (max-width: 480px){  .grid{ grid-template-columns: 1fr; } }
+/* ==== Mobile: make sidebar fixed ==== */
+@media (max-width: 992px){
+  .products-wrap{
+    /* عشان المحتوى ما يطلع تحت السايدبار الثابت */
+    padding-top: 120px; /* عدّلها حسب ارتفاع السايدبار عندك */
+  }
+
+  .sidebar{
+    position: fixed;
+    /* حطها تحت النافبار مباشرة */
+    top: 70px;                 /* إذا نافبارك أعلى/أقل عدّل الرقم */
+    left: 18px;
+    right: 18px;
+    z-index: 1200;
+
+    /* شكل مناسب لما تكون full-width تقريباً */
+    width: auto;
+    border-radius: 12px;
+  }
+}
+
 
 .card{
   background: var(--surface);
