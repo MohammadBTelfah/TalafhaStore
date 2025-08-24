@@ -130,39 +130,50 @@ export default function ProductsPage({ darkMode }) {
 
   // Cart + Snackbar
   const addToCart = async (product, qty = 1) => {
-    try {
-      const raw = localStorage.getItem("token") || "";
-      const token = raw.startsWith("Bearer ") ? raw.slice(7) : raw;
-      if (!token) {
-        showSnack("Please login first.", "error", 2500);
-        return;
-      }
-      const quantity = Math.max(1, Number(qty) || 1);
-      await axios.post(
-        `${API_BASE}/api/cart/add-to-cart`,
-        { productId: product._id, quantity },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      try {
-        window.dispatchEvent(new CustomEvent("cart:delta", { detail: { delta: quantity } }));
-        if (typeof window.onCartDelta === "function") window.onCartDelta(quantity);
-        localStorage.setItem("__cart_delta_ping__", String(Date.now()));
-      } catch {}
-      showSnack("Product added successfully", "success", 2200);
-    } catch (e) {
-      const msg = e?.response?.data?.message || e?.message || "Failed to add product";
-      console.error("AddToCart error:", e?.response?.data || e);
-      showSnack(msg, "error", 3000);
-    }
-  };
+  try {
+    // read token (allow both "xxx" or "Bearer xxx")
+    const raw = localStorage.getItem("token") || "";
+    const token = raw.startsWith("Bearer ") ? raw.slice(7) : raw;
 
-  const selectCategory = (catValue) => {
-    setSelectedCatId(catValue);
-    const sp = new URLSearchParams(searchParams);
-    if (catValue === "all") sp.delete("category");
-    else sp.set("category", catValue);
-    navigate({ search: `?${sp.toString()}` }, { replace: true });
-  };
+    if (!token) {
+      showSnack("Please login first.", "error", 2500);
+      return;
+    }
+
+    const quantity = Math.max(1, Number(qty) || 1);
+
+    await axios.post(
+      `${API_BASE}/api/cart/add-to-cart`,
+      { productId: product._id, quantity },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    // notify header/cart badge
+    try {
+      window.dispatchEvent(
+        new CustomEvent("cart:delta", { detail: { delta: quantity } })
+      );
+      if (typeof window.onCartDelta === "function") window.onCartDelta(quantity);
+      localStorage.setItem("__cart_delta_ping__", String(Date.now()));
+    } catch {}
+
+    showSnack("Product added successfully.", "success", 2200);
+  } catch (e) {
+    const msg =
+      e?.response?.data?.message || e?.message || "Failed to add product";
+    console.error("AddToCart error:", e?.response?.data || e);
+    showSnack(msg, "error", 3000);
+  }
+};
+
+const selectCategory = (catValue) => {
+  setSelectedCatId(catValue);
+  const sp = new URLSearchParams(searchParams);
+  if (catValue === "all") sp.delete("category");
+  else sp.set("category", catValue);
+  navigate({ search: `?${sp.toString()}` }, { replace: true });
+};
+
 
   // Render
   return (

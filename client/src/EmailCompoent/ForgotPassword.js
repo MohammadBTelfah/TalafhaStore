@@ -12,6 +12,9 @@ import {
 import SendIcon from '@mui/icons-material/Send';
 import axios from 'axios';
 
+// ✅ قاعدة الـ API: من env أو fallback للإنتاج
+const API_BASE = process.env.REACT_APP_API_URL || '"http://127.0.0.1:5002"';
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +24,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5002/api/users/request-password-reset', { email });
+      const res = await axios.post(`${API_BASE}/api/users/request-password-reset`, { email });
       setSnackbar({ open: true, message: res.data.message, severity: 'success' });
     } catch (err) {
       setSnackbar({
@@ -70,24 +73,22 @@ export default function ForgotPassword() {
       </Paper>
 
       <Snackbar
-  open={snackbar.open}
-  autoHideDuration={5000}
-  onClose={() => setSnackbar({ ...snackbar, open: false })}
-  anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
->
-
-      <Alert
-  onClose={() => setSnackbar({ ...snackbar, open: false })}
-  severity={snackbar.severity}
-  sx={{
-    width: '100%',
-    fontSize: '1.1rem',
-    py: 2,
-    px: 3,
-    borderRadius: 2
-  }}
->
-
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{
+            width: '100%',
+            fontSize: '1.1rem',
+            py: 2,
+            px: 3,
+            borderRadius: 2
+          }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
