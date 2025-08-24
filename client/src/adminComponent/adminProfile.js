@@ -1,291 +1,341 @@
-import { useState, useEffect } from "react";
+// adminProfile.js
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  Box, Container, Typography, Avatar, IconButton, TextField,
-  Button, Paper, Stack, Collapse, LinearProgress, Snackbar, Alert, InputAdornment
-} from "@mui/material";
-import { styled } from "@mui/system";
-import { FiEdit2, FiLock } from "react-icons/fi";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
 
-// 📦 STYLES
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(4),
-  borderRadius: theme.spacing(2),
-  transition: "all 0.3s ease"
-}));
+// ✅ قاعدة الـ API من env (CRA) — محلياً غيّرها إلى http://127.0.0.1:5002 في client/.env
+const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
 
-const StyledAvatar = styled(Avatar)(({ theme }) => ({
-  width: 150,
-  height: 150,
-  cursor: "pointer",
-  margin: "0 auto",
-  border: `4px solid ${theme.palette.primary.main}`,
-  transition: "transform 0.3s ease",
-  "&:hover": {
-    transform: "scale(1.05)"
-  }
-}));
-
-const InfoSection = styled(Box)(({ theme }) => ({
-  marginTop: theme.spacing(2),
-  padding: theme.spacing(2),
-  borderRadius: theme.spacing(1),
-  "&:hover": {
-    backgroundColor: theme.palette.action.hover
-  }
-}));
-
-// 🧠 COMPONENT
-const AdminProfile = ({ profileData }) => {
-  console.log("🔁 Component render - profileData:", profileData); // ✅ Check prop
-
+export default function AdminProfile() {
+  const [localProfile, setLocalProfile] = useState(null);
   const [editMode, setEditMode] = useState({});
+  const [passwordData, setPasswordData] = useState({
+    current: "",
+    new: "",
+    confirm: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
-  const [showFields, setShowFields] = useState({ current: false, new: false, confirm: false });
-  const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
-  const [localProfile, setLocalProfile] = useState(profileData);
-  const [passwordData, setPasswordData] = useState({ current: "", new: "", confirm: "" });
+  const [loading, setLoading] = useState(false);
+  const [notif, setNotif] = useState({ msg: "", type: "" });
 
+  const showNotification = (msg, type = "info") => {
+    setNotif({ msg, type });
+    setTimeout(() => setNotif({ msg: "", type: "" }), 2500);
+  };
+
+  const token = localStorage.getItem("token");
+
+  // === Load my profile (إن احتجت تجيب البيانات من السيرفر) ===
   useEffect(() => {
-    console.log("🧪 localProfile updated:", localProfile); // ✅ Check internal state
-  }, [localProfile]);
+    // إذا كان عندك endpoint لجلب البروفايل (اختياري):
+    // axios.get(`${API_BASE}/api/users/profile`, { headers: { Authorization: `Bearer ${token}` }})
+    //   .then(res => setLocalProfile(res.data.user))
+    //   .catch(() => {});
+    //
+    // أو لو بتخزّنها عند تسجيل الدخول:
+    try {
+      const cached = localStorage.getItem("user");
+      if (cached) {
+        setLocalProfile(JSON.parse(cached));
+      }
+    } catch (e) {}
+  }, []);
 
-  const showNotification = (message, severity) => {
-    setNotification({ open: true, message, severity });
+  // ==== Helpers ====
+  const avatarSrc =
+    localProfile?.profileImage
+      ? // لو صورة غوغل (رابط كامل)
+        localProfile.profileImage.includes("googleusercontent")
+        ? localProfile.profileImage
+        : `${API_BASE}/uploads/${localProfile.profileImage}`
+      : "https://i.pravatar.cc/150?u=default";
+
+  const handleFieldChange = (key, value) => {
+    setLocalProfile((prev) => ({ ...prev, [key]: value }));
+    setEditMode((prev) => ({ ...prev, [key]: true }));
   };
 
-  const handleEdit = (field) => {
-    setEditMode({ ...editMode, [field]: true });
-  };
-
+  // === Update profile fields ===
   const handleSave = async () => {
     try {
+      setLoading(true);
       const formData = new FormData();
-      Object.entries(localProfile).forEach(([key, value]) => {
-        formData.append(key, value);
+      // جمع كل الحقول المعدّلة (أو أرسل الكل ببساطة)
+      Object.entries(localProfile || {}).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) formData.append(k, v);
       });
 
-      const res = await axios.put("http://127.0.0.1:5002/api/users/update-profile", formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "multipart/form-data"
+      const res = await axios.put(
+        `${API_BASE}/api/users/update-profile`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
         }
-      });
+      );
 
-      setEditMode({});
       setLocalProfile(res.data.user);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      setEditMode({});
       showNotification("Profile updated successfully", "success");
     } catch (err) {
-      showNotification("Failed to update profile", "error");
+      showNotification(
+        err.response?.data?.message || "Failed to update profile",
+        "error"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleImageUpload = async (event) => {
-    const file = event.target.files[0];
+  // === Upload/Change profile image ===
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-
     const formData = new FormData();
     formData.append("profileImage", file);
 
     try {
-      const res = await axios.put("http://127.0.0.1:5002/api/users/update-profile", formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "multipart/form-data"
+      setLoading(true);
+      const res = await axios.put(
+        `${API_BASE}/api/users/update-profile`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
         }
-      });
-
+      );
       setLocalProfile(res.data.user);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       showNotification("Profile picture updated successfully", "success");
     } catch (err) {
-      showNotification("Image upload failed", "error");
+      showNotification(
+        err.response?.data?.message || "Image upload failed",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+      // تنظيف قيمة input حتى تقدّر ترفع نفس الملف مرة ثانية إن رغبت
+      e.target.value = "";
     }
   };
 
+  // === Change password ===
   const handlePasswordChange = async () => {
     if (passwordData.new !== passwordData.confirm) {
       showNotification("Passwords do not match", "error");
       return;
     }
-
     try {
-      await axios.post("http://127.0.0.1:5002/api/users/change-password", {
-        currentPassword: passwordData.current,
-        newPassword: passwordData.new
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
+      setLoading(true);
+      await axios.post(
+        `${API_BASE}/api/users/change-password`,
+        {
+          currentPassword: passwordData.current,
+          newPassword: passwordData.new,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
-      });
-
-      showNotification("Password changed successfully", "success");
+      );
       setPasswordData({ current: "", new: "", confirm: "" });
       setShowPassword(false);
+      showNotification("Password changed successfully", "success");
     } catch (err) {
-      showNotification("Password update failed", "error");
+      showNotification(
+        err.response?.data?.message || "Password update failed",
+        "error"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getPasswordStrength = (password) => {
-    const strength = { value: 0, label: "Weak" };
-    if (password.length >= 8) strength.value += 33;
-    if (/[A-Z]/.test(password)) strength.value += 33;
-    if (/[0-9]/.test(password)) strength.value += 34;
-    if (strength.value >= 100) strength.label = "Strong";
-    else if (strength.value >= 66) strength.label = "Medium";
-    return strength;
-  };
-
-  // ✅ Log avatar URL before rendering
-const avatarSrc = localProfile?.profileImage
-  ? localProfile.profileImage.includes("googleusercontent")
-    ? localProfile.profileImage
-    : `http://localhost:5002/uploads/${localProfile.profileImage}`
-  : "https://i.pravatar.cc/150?u=default";
-<StyledAvatar
-  src={avatarSrc}
-  alt="Profile"
-  onError={(e) => {
-    e.target.onerror = null;
-    e.target.src = "https://i.pravatar.cc/150?u=default"; // fallback
-  }}
-/>
+  if (!localProfile) {
+    return <div style={{ padding: 16 }}>Loading profile…</div>;
+  }
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ py: 4 }}>
-        <Typography variant="h3" align="center" gutterBottom>
-          Admin Profile
-        </Typography>
-
-        <StyledPaper elevation={3}>
-          <Box sx={{ position: "relative", mb: 4 }}>
-            <input
-              type="file"
-              accept="image/*"
-              id="avatar-upload"
-              style={{ display: "none" }}
-              onChange={handleImageUpload}
-            />
-            <label htmlFor="avatar-upload">
-              <StyledAvatar src={avatarSrc} />
-            </label>
-          </Box>
-
-          {["username", "email", "fullName", "phone"].map((field) => (
-            <InfoSection key={field}>
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <Typography variant="subtitle1" sx={{ minWidth: 120 }}>
-                  {field.charAt(0).toUpperCase() + field.slice(1)}:
-                </Typography>
-                {editMode[field] ? (
-                  <TextField
-                    fullWidth
-                    value={localProfile[field]}
-                    onChange={(e) => setLocalProfile({ ...localProfile, [field]: e.target.value })}
-                    size="small"
-                  />
-                ) : (
-                  <Typography variant="body1" sx={{ flexGrow: 1 }}>
-                    {localProfile[field]}
-                  </Typography>
-                )}
-                <IconButton onClick={() => handleEdit(field)}>
-                  <FiEdit2 />
-                </IconButton>
-              </Stack>
-            </InfoSection>
-          ))}
-
-          {Object.values(editMode).includes(true) && (
-            <Box mt={2}>
-              <Button variant="contained" fullWidth onClick={handleSave}>
-                Save Changes
-              </Button>
-            </Box>
-          )}
-
-          <Box sx={{ mt: 4 }}>
-            <Button startIcon={<FiLock />} onClick={() => setShowPassword(!showPassword)} variant="outlined" fullWidth>
-              Change Password
-            </Button>
-
-            <Collapse in={showPassword}>
-              <Box sx={{ mt: 2, p: 2 }}>
-                <Stack spacing={2}>
-                  {["current", "new", "confirm"].map((type) => (
-                    <TextField
-                      key={type}
-                      type={showFields[type] ? "text" : "password"}
-                      label={
-                        type === "current"
-                          ? "Current Password"
-                          : type === "new"
-                          ? "New Password"
-                          : "Confirm Password"
-                      }
-                      fullWidth
-                      value={passwordData[type]}
-                      onChange={(e) =>
-                        setPasswordData({ ...passwordData, [type]: e.target.value })
-                      }
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() =>
-                                setShowFields((prev) => ({
-                                  ...prev,
-                                  [type]: !prev[type],
-                                }))
-                              }
-                              edge="end"
-                            >
-                              {showFields[type] ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  ))}
-                  {passwordData.new && (
-                    <>
-                      <Typography variant="caption">
-                        Password Strength: {getPasswordStrength(passwordData.new).label}
-                      </Typography>
-                      <LinearProgress value={getPasswordStrength(passwordData.new).value} variant="determinate" />
-                    </>
-                  )}
-                  <Button
-                    variant="contained"
-                    onClick={handlePasswordChange}
-                    disabled={!passwordData.current || !passwordData.new || !passwordData.confirm}
-                  >
-                    Update Password
-                  </Button>
-                </Stack>
-              </Box>
-            </Collapse>
-          </Box>
-        </StyledPaper>
-
-        <Snackbar
-          open={notification.open}
-          autoHideDuration={6000}
-          onClose={() => setNotification({ ...notification, open: false })}
+    <div style={{ maxWidth: 800, margin: "24px auto", padding: 16 }}>
+      {/* Notification */}
+      {notif.msg && (
+        <div
+          style={{
+            marginBottom: 12,
+            padding: "10px 12px",
+            borderRadius: 8,
+            background:
+              notif.type === "success"
+                ? "#e6ffed"
+                : notif.type === "error"
+                ? "#ffeded"
+                : "#eef2ff",
+            color:
+              notif.type === "success"
+                ? "#0a6b2b"
+                : notif.type === "error"
+                ? "#7a0000"
+                : "#20234a",
+            border: "1px solid rgba(0,0,0,0.07)",
+          }}
         >
-          <Alert
-            onClose={() => setNotification({ ...notification, open: false })}
-            severity={notification.severity}
-            sx={{ width: "100%" }}
-          >
-            {notification.message}
-          </Alert>
-        </Snackbar>
-      </Box>
-    </Container>
-  );
-};
+          {notif.msg}
+        </div>
+      )}
 
-export default AdminProfile;
+      {/* Avatar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <img
+          src={avatarSrc}
+          alt="Avatar"
+          style={{
+            width: 100,
+            height: 100,
+            objectFit: "cover",
+            borderRadius: "50%",
+            border: "1px solid #ddd",
+          }}
+        />
+        <label
+          style={{
+            border: "1px solid #ccc",
+            padding: "8px 12px",
+            borderRadius: 6,
+            cursor: "pointer",
+            background: "#fafafa",
+          }}
+        >
+          Change Picture
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            style={{ display: "none" }}
+          />
+        </label>
+      </div>
+
+      {/* Editable fields */}
+      <div style={{ marginTop: 24, display: "grid", gap: 12 }}>
+        <Field
+          label="Full Name"
+          value={localProfile.fullName || ""}
+          onChange={(v) => handleFieldChange("fullName", v)}
+        />
+        <Field
+          label="Username"
+          value={localProfile.username || ""}
+          onChange={(v) => handleFieldChange("username", v)}
+        />
+        <Field
+          label="Email"
+          value={localProfile.email || ""}
+          onChange={(v) => handleFieldChange("email", v)}
+        />
+        <Field
+          label="Phone"
+          value={localProfile.phone || ""}
+          onChange={(v) => handleFieldChange("phone", v)}
+        />
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          style={{
+            background: "#1976d2",
+            color: "#fff",
+            padding: "10px 14px",
+            borderRadius: 8,
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          {loading ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
+
+      {/* Change password */}
+      <div style={{ marginTop: 32 }}>
+        <h3>Change Password</h3>
+        <div style={{ display: "grid", gap: 8, maxWidth: 420 }}>
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Current password"
+            value={passwordData.current}
+            onChange={(e) =>
+              setPasswordData((p) => ({ ...p, current: e.target.value }))
+            }
+            style={inputStyle}
+          />
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="New password"
+            value={passwordData.new}
+            onChange={(e) =>
+              setPasswordData((p) => ({ ...p, new: e.target.value }))
+            }
+            style={inputStyle}
+          />
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Confirm new password"
+            value={passwordData.confirm}
+            onChange={(e) =>
+              setPasswordData((p) => ({ ...p, confirm: e.target.value }))
+            }
+            style={inputStyle}
+          />
+          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <input
+              type="checkbox"
+              checked={showPassword}
+              onChange={() => setShowPassword((s) => !s)}
+            />
+            Show passwords
+          </label>
+
+          <button
+            onClick={handlePasswordChange}
+            disabled={loading}
+            style={{
+              background: "#2e7d32",
+              color: "#fff",
+              padding: "10px 14px",
+              borderRadius: 8,
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            {loading ? "Updating..." : "Update Password"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// === Simple input field component ===
+function Field({ label, value, onChange }) {
+  return (
+    <label style={{ display: "grid", gap: 6 }}>
+      <span style={{ fontSize: 13, color: "#555" }}>{label}</span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={inputStyle}
+      />
+    </label>
+  );
+}
+
+const inputStyle = {
+  padding: "10px 12px",
+  borderRadius: 8,
+  border: "1px solid #ddd",
+  outline: "none",
+};

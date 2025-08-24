@@ -1,3 +1,4 @@
+// dash.js
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
@@ -30,68 +31,54 @@ import CategoryIcon from '@mui/icons-material/Category';
 import OrdersManagement from '../adminComponent/adminOrders';
 import DashboardStats from './DashboardStats';
 
+// ✅ قاعدة الـ API من env (CRA). على Vercel ضِف REACT_APP_API_URL=https://talafhastore.onrender.com
+const API_BASE = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5002';
+
 const demoTheme = createTheme({
-  cssVariables: {
-    colorSchemeSelector: 'data-toolpad-color-scheme',
-  },
+  cssVariables: { colorSchemeSelector: 'data-toolpad-color-scheme' },
   colorSchemes: { light: true, dark: true },
-  breakpoints: {
-    values: { xs: 0, sm: 600, md: 600, lg: 1200, xl: 1536 },
-  },
+  breakpoints: { values: { xs: 0, sm: 600, md: 600, lg: 1200, xl: 1536 } },
 });
 
 function DemoPageContent({ pathname, profileData }) {
   return (
-    <Box
-      sx={{
-        py: 4,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        textAlign: 'center',
-      }}
-    >
+    <Box sx={{ py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
       {pathname === "/dashboard" && (
         <Typography variant="h4" gutterBottom>
           <DashboardStats/>
         </Typography>
       )}
 
-      {pathname ==="/Profile" && (
-      <AdminProfile profileData={profileData} />
-    )}
+      {pathname ==="/Profile" && <AdminProfile profileData={profileData} />}
 
-    
       {pathname === "/Product" && (
         <Typography variant="h4" gutterBottom>
           <ProductDashboard/>
         </Typography>
       )}
-       {pathname === "/category" && (
+
+      {pathname === "/category" && (
         <Typography variant="h4" gutterBottom>
           <Category/>
         </Typography>
       )}
-       {pathname === "/users" && (
+
+      {pathname === "/users" && (
         <Typography variant="h4" gutterBottom>
           <AllUsers/>
         </Typography>
       )}
-    {pathname === "/orders" && (
+
+      {pathname === "/orders" && (
         <Typography variant="h4" gutterBottom>
           <OrdersManagement/>
         </Typography>
       )}
-    
-    
-
     </Box>
   );
 }
 
-DemoPageContent.propTypes = {
-  pathname: PropTypes.string.isRequired,
-};
+DemoPageContent.propTypes = { pathname: PropTypes.string.isRequired };
 
 function ToolbarActionsSearch({ onLogout, role }) {
   return (
@@ -127,27 +114,21 @@ function ToolbarActionsSearch({ onLogout, role }) {
 
 function SidebarFooter({ mini }) {
   return (
-    <Typography
-      variant="caption"
-      sx={{ m: 1, whiteSpace: 'nowrap', overflow: 'hidden' }}
-    >
+    <Typography variant="caption" sx={{ m: 1, whiteSpace: 'nowrap', overflow: 'hidden' }}>
       {mini ? '© MUI' : `© ${new Date().getFullYear()} Made with love by MUI`}
     </Typography>
   );
 }
-
-SidebarFooter.propTypes = {
-  mini: PropTypes.bool.isRequired,
-};
+SidebarFooter.propTypes = { mini: PropTypes.bool.isRequired };
 
 function CustomAppTitle() {
   return (
     <Stack direction="row" alignItems="center" spacing={2}>
       <CloudCircleIcon fontSize="large" color="primary" />
-<Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
-  Talafha
-</Typography>
-<Chip size="small" label="LIVE" color="success" />
+      <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
+        Talafha
+      </Typography>
+      <Chip size="small" label="LIVE" color="success" />
       <Tooltip title="Connected to production">
         <CheckCircleIcon color="success" fontSize="small" />
       </Tooltip>
@@ -160,78 +141,43 @@ function DashboardLayoutSlots(props) {
   const [profileData, setProfileData] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
 
-const handleLogout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('role');      // 🔥 مهم جداً
-  // localStorage.removeItem('darkMode');  // لو بدك تمسحها كمان
-  navigate('/login');
-};
-
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    navigate('/login');
+  };
 
   const NAVIGATION = [
-    {
-      kind: 'header',
-      title: 'Main items',
-    },
-    {
-      segment: 'dashboard',
-      title: 'Dashboard',
-      icon: <DashboardIcon />,
-    },
-    {
-      segment: 'orders',
-      title: 'Orders',
-      icon: <ShoppingCartIcon />,
-    },
-    {
-      segment: 'Profile',
-      title: 'Profile',
-      icon: <AccountBoxIcon />,
-    },
-    ...(isAdmin
-      ? [
-          {
-            segment: 'Product',
-            title: 'Product',
-            icon: <RedeemIcon />,
-          },
-          {
-            segment: 'category',
-            title: 'Category',
-            icon: <CategoryIcon />,
-          },
-          {
-            segment:'users',
-            title:'Users',
-            icon: <AccountBoxIcon />,
-          },
-        ]
-      : []),
+    { kind: 'header', title: 'Main items' },
+    { segment: 'dashboard', title: 'Dashboard', icon: <DashboardIcon /> },
+    { segment: 'orders', title: 'Orders', icon: <ShoppingCartIcon /> },
+    { segment: 'Profile', title: 'Profile', icon: <AccountBoxIcon /> },
+    ...(isAdmin ? [
+      { segment: 'Product', title: 'Product', icon: <RedeemIcon /> },
+      { segment: 'category', title: 'Category', icon: <CategoryIcon /> },
+      { segment: 'users', title: 'Users', icon: <AccountBoxIcon /> },
+    ] : []),
   ];
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      async function fetchData() {
-        try {
-          const res = await axios.get("http://127.0.0.1:5002/api/users/profile", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          console.log("Profile data:", res);
-          setIsAdmin(res.data.role === 'admin');
-          setProfileData(res.data);
-        } catch (error) {
-          console.error("Error fetching profile data:", error);
-          navigate('/login');
-        }
+    if (!token) { navigate('/login'); return; }
+
+    async function fetchData() {
+      try {
+        const res = await axios.get(`${API_BASE}/api/users/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+          // withCredentials: true, // فعّلها فقط إذا كنت تستخدم كوكيز مشتركة
+        });
+        setIsAdmin(res.data.role === 'admin');
+        setProfileData(res.data);
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+        navigate('/login');
       }
-      fetchData();
-    } else {
-      navigate('/login');
     }
-  }, []);
+    fetchData();
+  }, [navigate]);
 
   const { window } = props;
   const router = useDemoRouter('/dashboard');
@@ -239,12 +185,7 @@ const handleLogout = () => {
 
   return (
     <DemoProvider window={demoWindow}>
-      <AppProvider
-        navigation={NAVIGATION}
-        router={router}
-        theme={demoTheme}
-        window={demoWindow}
-      >
+      <AppProvider navigation={NAVIGATION} router={router} theme={demoTheme} window={demoWindow}>
         <DashboardLayout
           slots={{
             appTitle: CustomAppTitle,
@@ -261,8 +202,6 @@ const handleLogout = () => {
   );
 }
 
-DashboardLayoutSlots.propTypes = {
-  window: PropTypes.func,
-};
+DashboardLayoutSlots.propTypes = { window: PropTypes.func };
 
 export default DashboardLayoutSlots;

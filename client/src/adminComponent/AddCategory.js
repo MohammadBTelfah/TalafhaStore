@@ -5,6 +5,9 @@ import {
   TableContainer, TableHead, TableRow, Typography, Stack
 } from '@mui/material';
 
+// ✅ قاعدة الـ API من env (CRA). محليًا تقدر تخلي .env = http://127.0.0.1:5002
+const API_BASE = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5002';
+
 export function Category() {
   const [name, setName] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -14,14 +17,13 @@ export function Category() {
   // Get all categories
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('https://talafhastore.onrender.com/api/categories/getAll');
+      const response = await axios.get(`${API_BASE}/api/categories/getAll`);
       setRows(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
   };
 
-  // Load on mount
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -31,13 +33,10 @@ export function Category() {
     e.preventDefault();
     try {
       const newRow = { name };
-      await axios.post('https://talafhastore.onrender.com/api/categories/create', newRow, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      await axios.post(`${API_BASE}/api/categories/create`, newRow, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-
-      await fetchCategories(); // safer than manual state update
+      await fetchCategories();
       setName('');
     } catch (error) {
       console.error('Error creating category:', error);
@@ -48,12 +47,10 @@ export function Category() {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this category?')) return;
     try {
-      await axios.delete(`https://talafhastore.onrender.com/api/categories/delete/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      await axios.delete(`${API_BASE}/api/categories/delete/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setRows(prev => prev.filter(r => r._id !== id));
+      setRows((prev) => prev.filter((r) => r._id !== id));
     } catch (error) {
       console.error('Error deleting category:', error);
     }
@@ -67,23 +64,12 @@ export function Category() {
 
   // Save changes
   const handleSave = async (id) => {
-    if (!id) {
-      console.warn("Missing _id in category row.");
-      return;
-    }
-
+    if (!id) return;
     try {
-      await axios.put(`https://talafhastore.onrender.com/api/categories/update/${id}`, { name: editName }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      await axios.put(`${API_BASE}/api/categories/update/${id}`, { name: editName }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-
-      setRows(prev =>
-        prev.map(r =>
-          r._id === id ? { ...r, name: editName } : r
-        )
-      );
+      setRows((prev) => prev.map((r) => (r._id === id ? { ...r, name: editName } : r)));
       setEditingId(null);
       setEditName('');
     } catch (error) {

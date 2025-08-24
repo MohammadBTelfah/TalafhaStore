@@ -1,3 +1,4 @@
+// DashboardStats.js
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
@@ -14,15 +15,15 @@ import Inventory2Outlined from "@mui/icons-material/Inventory2Outlined";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { PieChart } from "@mui/x-charts/PieChart";
 
-// baseURL للـ API
-axios.defaults.baseURL = "http://127.0.0.1:5002";
+// ✅ قاعدة الـ API من env (CRA)
+const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
 
 const API = {
-  summary: "/api/admin/stats/summary",
-  timeseries: "/api/admin/stats/sales-timeseries?range=30d",
-  status: "/api/admin/stats/orders-by-status",
-  top: (limit = 5) => `/api/admin/stats/top-products?limit=${limit}`,
-  recent: (limit = 8) => `/api/admin/stats/recent-orders?limit=${limit}`,
+  summary: `${API_BASE}/api/admin/stats/summary`,
+  timeseries: `${API_BASE}/api/admin/stats/sales-timeseries?range=30d`,
+  status: `${API_BASE}/api/admin/stats/orders-by-status`,
+  top: (limit = 5) => `${API_BASE}/api/admin/stats/top-products?limit=${limit}`,
+  recent: (limit = 8) => `${API_BASE}/api/admin/stats/recent-orders?limit=${limit}`,
 };
 
 export default function DashboardStats() {
@@ -212,7 +213,7 @@ export default function DashboardStats() {
                     <Stack key={p.productId} direction="row" alignItems="center" spacing={1} sx={{ py: 0.5 }}>
                       <Avatar
                         variant="rounded"
-                        src={p.prodImage ? `http://localhost:5002/uploads/${p.prodImage}` : undefined}
+                        src={p.prodImage ? `${API_BASE}/uploads/${p.prodImage}` : undefined}
                         sx={{ width: 44, height: 44, mr: 1.5 }}
                       />
                       <Typography sx={{ flex: 1 }} noWrap title={p.prodName}>

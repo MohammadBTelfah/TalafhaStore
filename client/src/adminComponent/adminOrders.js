@@ -31,7 +31,8 @@ import {
 import { format } from "date-fns";
 import { FaSearch, FaEdit } from "react-icons/fa";
 
-const API_ROOT = "http://127.0.0.1:5002/api/orders";
+const API_BASE = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5002';
+const API_ROOT = `${API_BASE}/api/orders`;
 const ADMIN_LIST = `${API_ROOT}/admin/orders`;
 const UPDATE_STATUS = (id) => `${API_ROOT}/admin/orders/${id}/status`;
 
@@ -333,7 +334,7 @@ const confirmStatusChange = async () => {
                       const title = p.prodName || p.title || p.name || `Item ${idx + 1}`;
                       const price = Number(p.prodPrice ?? p.price ?? it?.price ?? 0);
                       const qty = Number(it?.qty ?? it?.quantity ?? 1);
-                      const img = p.prodImage ? `http://localhost:5002/uploads/${p.prodImage}` : null;
+                      const img = p.prodImage ? `${API_BASE}/uploads/${p.prodImage}` : null;
                       return (
                         <TableRow key={idx}>
                           <TableCell>

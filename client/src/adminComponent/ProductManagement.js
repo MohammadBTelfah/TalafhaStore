@@ -1,3 +1,4 @@
+// ProductManagement.js
 import React, { useState, useEffect } from "react";
 import {
   Box, Container, Typography, TextField, Button, Table, TableBody,
@@ -10,6 +11,9 @@ import { Delete, Edit } from "@mui/icons-material";
 import axios from "axios";
 import { useDropzone } from "react-dropzone";
 import '../styles/productMangment.css';
+
+// ✅ قاعدة API من env (CRA)
+const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
 
 const ProductManagement = () => {
   const [darkMode, setDarkMode] = useState(true);
@@ -28,7 +32,7 @@ const ProductManagement = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:5002/api/products/getall");
+      const res = await axios.get(`${API_BASE}/api/products/getall`);
       setProducts(res.data || []);
     } catch (err) {
       console.error(err);
@@ -37,7 +41,7 @@ const ProductManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get("http://localhost:5002/api/categories/getAll");
+      const res = await axios.get(`${API_BASE}/api/categories/getAll`);
       setCategories(res.data || []);
     } catch (err) {
       console.error("Error fetching categories:", err);
@@ -70,10 +74,12 @@ const ProductManagement = () => {
 
   const appendFormData = (data, form) => {
     Object.entries(form).forEach(([key, val]) => {
-      if (typeof val === "boolean") {
-        data.append(key, val.toString());
-      } else {
-        data.append(key, val);
+      if (val !== null && val !== undefined) {
+        if (typeof val === "boolean") {
+          data.append(key, val.toString());
+        } else {
+          data.append(key, val);
+        }
       }
     });
   };
@@ -83,7 +89,7 @@ const ProductManagement = () => {
     const data = new FormData();
     appendFormData(data, formData);
     try {
-      await axios.post("http://localhost:5002/api/products/create", data, {
+      await axios.post(`${API_BASE}/api/products/create`, data, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${localStorage.getItem("token")}`
@@ -101,7 +107,7 @@ const ProductManagement = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5002/api/products/delete/${id}`, {
+      await axios.delete(`${API_BASE}/api/products/delete/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       fetchProducts();
@@ -131,7 +137,7 @@ const ProductManagement = () => {
     appendFormData(data, formData);
     try {
       await axios.put(
-        `http://localhost:5002/api/products/update/${editingProduct._id}`,
+        `${API_BASE}/api/products/update/${editingProduct._id}`,
         data,
         {
           headers: {
@@ -227,9 +233,7 @@ const ProductManagement = () => {
                     <TableCell>{prod.prodName}</TableCell>
                     <TableCell>
                       {prod.discount > 0 ? (
-                        <>
-                          <del style={{ opacity: 0.6 }}>{prod.prodPrice}</del>
-                        </>
+                        <del style={{ opacity: 0.6 }}>{prod.prodPrice}</del>
                       ) : (
                         prod.prodPrice
                       )}
@@ -241,12 +245,15 @@ const ProductManagement = () => {
                     <TableCell>{prod.prodBrand}</TableCell>
                     <TableCell>{prod.isFeatured ? "✅" : "❌"}</TableCell>
                     <TableCell>
-                      <img
-                        src={`http://localhost:5002/uploads/${prod.prodImage}`}
-                        alt="prod"
-                        width="40"
-                        style={{ borderRadius: "6px" }}
-                      />
+                      {prod.prodImage && (
+                        <img
+                          src={`${API_BASE}/uploads/${prod.prodImage}`}
+                          alt="prod"
+                          width="40"
+                          style={{ borderRadius: "6px" }}
+                          onError={(e) => { e.currentTarget.style.display = "none"; }}
+                        />
+                      )}
                     </TableCell>
                     <TableCell>
                       <IconButton onClick={() => openEditDialog(prod)}><Edit /></IconButton>
