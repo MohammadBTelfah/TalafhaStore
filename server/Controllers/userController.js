@@ -55,7 +55,7 @@ user.verifyToken = token;
 await user.save();
 
 // ✅ تحديد رابط الموقع من env أو fallback
-const clientURL = process.env.CLIENT_URL || "http://localhost:3000";
+const clientURL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 // ✅ إنشاء رابط التفعيل
 const verificationUrl = `${clientURL}/verify-email?token=${token}`;
@@ -263,7 +263,7 @@ exports.requestPasswordReset = async (req, res) => {
     await user.save();
 
     // ✅ خذ الرابط من env
-    const clientURL = process.env.CLIENT_URL || "http://localhost:3000";
+    const clientURL = process.env.FRONTEND_URL || "http://localhost:3000";
     const resetLink = `${clientURL}/reset-password?token=${resetToken}`;
 
     const message = `
@@ -464,7 +464,7 @@ exports.googleCallback = async (req, res) => {
     );
 
     // استخدم عنوان الفرونت من env
-    const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+    const CLIENT_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
     // مهم ترميز القيم
     const redirectUrl = `${CLIENT_URL}/google-success` +
