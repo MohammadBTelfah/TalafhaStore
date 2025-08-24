@@ -15,6 +15,9 @@ import LockResetIcon from '@mui/icons-material/LockReset';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+// ✅ قاعدة الـ API (env في المحلي/Vercel) مع fallback للإنتاج
+const API_BASE = process.env.REACT_APP_API_URL || 'https://talafhastore.onrender.com';
+
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -37,7 +40,7 @@ export default function ResetPassword() {
       }
 
       try {
-        const res = await axios.post('http://localhost:5002/api/users/verify-reset-token', { token });
+        const res = await axios.post(`${API_BASE}/api/users/verify-reset-token`, { token });
         if (!res.data.valid) {
           navigate('/forgot-password');
         }
@@ -66,7 +69,7 @@ export default function ResetPassword() {
 
     try {
       setLoading(true);
-      const res = await axios.post('http://localhost:5002/api/users/reset-password', {
+      const res = await axios.post(`${API_BASE}/api/users/reset-password`, {
         token,
         newPassword
       });
