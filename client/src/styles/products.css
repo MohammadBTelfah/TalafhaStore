@@ -298,6 +298,13 @@ select option:hover {
   border: 1px solid var(--chip-border);
   border-radius: 10px; padding: 8px 10px; cursor: pointer;
 }
+.modal-actions .btn {
+  padding: 10px 14px;   /* أصغر من الافتراضي */
+  font-size: 15px;      /* حجم متوازن */
+  font-weight: 700;     /* مش عريض زيادة */
+  border-radius: 10px;  /* أنعم شوي */
+}
+
 /* ===========================
    SNACKBAR (Top-Center)
 =========================== */
