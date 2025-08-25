@@ -291,7 +291,11 @@ select option:hover {
 }
 .modal-row > .stock-badge{ position: static; } /* داخل الصف، بدون absolute */
 
-.modal-actions{ display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 6px; }
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr;   /* زر واحد ياخد العرض كامل */
+  gap: 10px;
+}
 .close-x{
   position: absolute; top: 10px; right: 12px;
   background: var(--chip-bg);
