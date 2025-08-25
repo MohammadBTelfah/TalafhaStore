@@ -5,38 +5,41 @@ const path = require('path');
 exports.createProduct = async (req, res) => {
   try {
     const {
-  prodName,
-  prodPrice,
-  prodDescription,
-  prodCategory,
-  prodStock,
-  prodBrand,
-  discount,
-  isFeatured
-} = req.body;
+      prodName,
+      prodPrice,
+      prodDescription,
+      prodCategory,
+      prodStock,
+      prodBrand,
+      discount,
+      isFeatured
+    } = req.body;
 
-
-    const prodImage = req.file ? req.file.filename : null;
-    if (!prodImage) {
+    if (!req.file) {
       return res.status(400).json({ message: 'Product image is required' });
     }
 
+    // 🔗 توليد رابط عام كامل للصورة (يدعم البروكسي)
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers['x-forwarded-host'] || req.get('host');
+    const prodImage = `${protocol}://${host}/uploads/${req.file.filename}`;
+
     const product = new Product({
-  prodName,
-  prodPrice,
-  prodDescription,
-  prodCategory,
-  prodStock,
-  prodImage,
-  prodBrand,
-  discount: Number(discount),
-  isFeatured: isFeatured === 'true' // لأن القيمة قادمة من FormData كسلسلة
-});
+      prodName,
+      prodPrice,
+      prodDescription,
+      prodCategory,
+      prodStock,
+      prodImage, // ← URL كامل
+      prodBrand,
+      discount: Number(discount),
+      isFeatured: isFeatured === 'true'
+    });
 
     await product.save();
     res.status(201).json({ message: 'Product created successfully', product });
   } catch (err) {
-      console.error("🔥 ERROR CREATING PRODUCT:", err); // اطبع الخطأ في السيرفر
+    console.error("🔥 ERROR CREATING PRODUCT:", err);
     res.status(500).json({ message: 'Error creating product', error: err.message });
   }
 };
@@ -69,30 +72,31 @@ exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-  prodName,
-  prodPrice,
-  prodDescription,
-  prodCategory,
-  prodStock,
-  prodBrand,
-  discount,
-  isFeatured
-} = req.body;
-
+      prodName,
+      prodPrice,
+      prodDescription,
+      prodCategory,
+      prodStock,
+      prodBrand,
+      discount,
+      isFeatured
+    } = req.body;
 
     const updateData = {
-  prodName,
-  prodPrice,
-  prodDescription,
-  prodCategory,
-  prodStock,
-  prodBrand,
-  discount: Number(discount),
-  isFeatured: isFeatured === 'true'
-};
+      prodName,
+      prodPrice,
+      prodDescription,
+      prodCategory,
+      prodStock,
+      prodBrand,
+      discount: Number(discount),
+      isFeatured: isFeatured === 'true'
+    };
 
     if (req.file) {
-      updateData.prodImage = req.file.filename;
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers['x-forwarded-host'] || req.get('host');
+      updateData.prodImage = `${protocol}://${host}/uploads/${req.file.filename}`;
     }
 
     const product = await Product.findByIdAndUpdate(id, updateData, { new: true });
