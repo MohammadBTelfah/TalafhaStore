@@ -1,5 +1,15 @@
 const Product = require('../models/Products');
-const path = require('path');
+const cloudinary = require('../utils/cloudinary');
+
+function uploadToCloudinary(buffer, folder) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream({ folder }, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+    stream.end(buffer);
+  });
+}
 
 // ✅ Create product
 exports.createProduct = async (req, res) => {
@@ -16,13 +26,12 @@ exports.createProduct = async (req, res) => {
     } = req.body;
 
     if (!req.file) {
-      return res.status(400).json({ message: 'Product image is required' });
-    }
+  return res.status(400).json({ message: 'Product image is required' });
+}
 
-    // 🔗 توليد رابط عام كامل للصورة (يدعم البروكسي)
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.headers['x-forwarded-host'] || req.get('host');
-    const prodImage = `${protocol}://${host}/uploads/${req.file.filename}`;
+// 🔗 رفع Cloudinary
+const result = await uploadToCloudinary(req.file.buffer, 'talafha/products');
+const prodImage = result.secure_url;
 
     const product = new Product({
       prodName,
@@ -93,11 +102,12 @@ exports.updateProduct = async (req, res) => {
       isFeatured: isFeatured === 'true'
     };
 
-    if (req.file) {
-      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-      const host = req.headers['x-forwarded-host'] || req.get('host');
-      updateData.prodImage = `${protocol}://${host}/uploads/${req.file.filename}`;
-    }
+  if (req.file?.buffer) {
+  const result = await uploadToCloudinary(req.file.buffer, 'talafha/products');
+  updateData.prodImage = result.secure_url;
+}
+
+
 
     const product = await Product.findByIdAndUpdate(id, updateData, { new: true });
     if (!product) {

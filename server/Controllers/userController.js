@@ -1,9 +1,21 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const sendEmail = require("../utils/sendEmail"); // تأكد من وجودها
+const cloudinary = require('../utils/cloudinary');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+function uploadToCloudinary(buffer, folder) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream({ folder }, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+    stream.end(buffer);
+  });
+}
+
 
 exports.register = async (req, res) => {
   try {
@@ -34,12 +46,12 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // ✅ تجهيز رابط صورة الحساب (إن وُجدت) كرابط كامل
-    let profileImage = '';
-    if (req.file) {
-      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-      const host = req.headers['x-forwarded-host'] || req.get('host');
-      profileImage = `${protocol}://${host}/uploads/${req.file.filename}`;
-    }
+   let profileImage = '';
+if (req.file?.buffer) {
+  const result = await uploadToCloudinary(req.file.buffer, 'talafha/avatars');
+  profileImage = result.secure_url;
+}
+
 
     // ✅ إنشاء المستخدم
     const user = new User({
@@ -177,16 +189,10 @@ exports.updateUserProfile = async (req, res) => {
     if (address) user.address = address;
 
     // 🔗 حضّر معلومات البروتوكول/الدومين (تدعم البروكسي)
-    const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-    const host = req.headers["x-forwarded-host"] || req.get("host");
-
-    // ✅ تحديث صورة البروفايل إن وُجدت (خزن URL كامل)
-    if (req.file) {
-      user.profileImage = `${protocol}://${host}/uploads/${req.file.filename}`;
-      // (اختياري) احذف الصورة القديمة من السيرفر إن كانت عندك مخزنة محليًا وبدك تنظّف
-      // مثال سريع:
-      // if (oldLocalPath) fs.unlink(oldLocalPath, () => {});
-    }
+if (req.file?.buffer) {
+  const result = await uploadToCloudinary(req.file.buffer, 'talafha/avatars');
+  user.profileImage = result.secure_url;
+}
 
     await user.save();
 
@@ -554,9 +560,11 @@ exports.updateAnyUserByAdmin = async (req, res) => {
       role
     };
 
-    if (req.file) {
-      updateData.profileImage = req.file.filename;
-    }
+   if (req.file?.buffer) {
+  const result = await uploadToCloudinary(req.file.buffer, 'talafha/avatars');
+  updateData.profileImage = result.secure_url;
+}
+
 
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
 

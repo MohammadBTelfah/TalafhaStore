@@ -2,35 +2,13 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-
 const userController = require('../Controllers/userController');
 const auth = require('../middleware/authMiddleware');
 const AdminAuth = require('../middleware/adminAuth');
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // إعدادات رفع الصور
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
-
-// 📌 إنشاء المجلد إذا مش موجود
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const base = path.basename(file.originalname, ext)
-      .trim()
-      .replace(/\s+/g, '-')      // استبدال الفراغات بـ -
-      .replace(/[^a-zA-Z0-9-_]/g, ''); // منع الرموز الغريبة
-    cb(null, `${Date.now()}-${base}${ext}`);
-  }
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 
