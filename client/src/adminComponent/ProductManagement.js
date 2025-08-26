@@ -10,10 +10,18 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { Delete, Edit } from "@mui/icons-material";
 import axios from "axios";
 import { useDropzone } from "react-dropzone";
-import '../styles/productMangment.css';
+import "../styles/productMangment.css";
 
 // ✅ قاعدة API من env (CRA)
 const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
+const IMG_BASE = `${API_BASE}/uploads`;
+
+// ✅ توحيد بناء رابط الصورة (Cloudinary URL أو filename قديم)
+const getImageUrl = (v) => {
+  if (!v) return "";
+  const s = String(v);
+  return s.startsWith("http") ? s : `${IMG_BASE}/${s.replace(/\\/g, "/")}`;
+};
 
 const ProductManagement = () => {
   const [darkMode, setDarkMode] = useState(true);
@@ -247,7 +255,7 @@ const ProductManagement = () => {
                     <TableCell>
                       {prod.prodImage && (
                         <img
-                          src={`${API_BASE}/uploads/${prod.prodImage}`}
+                          src={getImageUrl(prod.prodImage)}
                           alt="prod"
                           width="40"
                           style={{ borderRadius: "6px" }}
