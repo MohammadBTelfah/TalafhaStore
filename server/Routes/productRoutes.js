@@ -3,7 +3,9 @@ const router = express.Router();
 const productController = require('../Controllers/productController');
 const auth = require('../middleware/authMiddleware');
 const multer = require('multer');
-const fs= require('fs')
+const path = require('path');
+const fs = require('fs');
+
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) {

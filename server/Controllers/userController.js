@@ -33,6 +33,14 @@ exports.register = async (req, res) => {
     // ✅ تشفير كلمة السر
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // ✅ تجهيز رابط صورة الحساب (إن وُجدت) كرابط كامل
+    let profileImage = '';
+    if (req.file) {
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers['x-forwarded-host'] || req.get('host');
+      profileImage = `${protocol}://${host}/uploads/${req.file.filename}`;
+    }
+
     // ✅ إنشاء المستخدم
     const user = new User({
       username,
@@ -40,37 +48,36 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       fullName,
       phone,
-      profileImage: req.file ? req.file.filename : ''
+      profileImage, // ← صار URL كامل جاهز للعرض
     });
 
     // ✅ إنشاء توكن التحقق
-   // ✅ إنشاء توكن التحقق
-const token = jwt.sign(
-  { id: user._id },
-  process.env.JWT_SECRET,
-  { expiresIn: '1d' }
-);
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+    user.verifyToken = token;
 
-user.verifyToken = token;
-await user.save();
+    await user.save();
 
-// ✅ تحديد رابط الموقع من env أو fallback
-const clientURL = process.env.FRONTEND_URL || "http://localhost:3000";
+    // ✅ تحديد رابط الواجهة
+    const clientURL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-// ✅ إنشاء رابط التفعيل
-const verificationUrl = `${clientURL}/verify-email?token=${token}`;
+    // ✅ رابط التفعيل
+    const verificationUrl = `${clientURL}/verify-email?token=${token}`;
 
-const html = `
-  <h2>Verify your email</h2>
-  <p>Click the link below to verify your account:</p>
-  <a href="${verificationUrl}">${verificationUrl}</a>
-`;
+    const html = `
+      <h2>Verify your email</h2>
+      <p>Click the link below to verify your account:</p>
+      <a href="${verificationUrl}">${verificationUrl}</a>
+    `;
 
-await sendEmail({
-  to: user.email,
-  subject: 'Verify your email - TalafhaStore',
-  html,
-});
+    await sendEmail({
+      to: user.email,
+      subject: 'Verify your email - TalafhaStore',
+      html,
+    });
 
     // ✅ الرد
     res.status(201).json({
@@ -79,7 +86,8 @@ await sendEmail({
         id: user._id,
         username: user.username,
         email: user.email,
-        fullName: user.fullName
+        fullName: user.fullName,
+        profileImage: user.profileImage, // (URL)
       }
     });
   } catch (err) {
@@ -168,20 +176,32 @@ exports.updateUserProfile = async (req, res) => {
     if (phone) user.phone = phone;
     if (address) user.address = address;
 
-    // ✅ تحديث صورة البروفايل إن وُجدت
+    // 🔗 حضّر معلومات البروتوكول/الدومين (تدعم البروكسي)
+    const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+    const host = req.headers["x-forwarded-host"] || req.get("host");
+
+    // ✅ تحديث صورة البروفايل إن وُجدت (خزن URL كامل)
     if (req.file) {
-      user.profileImage = req.file.filename;
+      user.profileImage = `${protocol}://${host}/uploads/${req.file.filename}`;
+      // (اختياري) احذف الصورة القديمة من السيرفر إن كانت عندك مخزنة محليًا وبدك تنظّف
+      // مثال سريع:
+      // if (oldLocalPath) fs.unlink(oldLocalPath, () => {});
     }
 
     await user.save();
 
-    // ✅ إخفاء كلمة السر من الرد
-    const userWithoutPassword = { ...user._doc };
-    delete userWithoutPassword.password;
+    // ✅ تجهيز ردّ آمن + ضمان إرجاع URL كامل لو كان قديمًا filename فقط
+    const safeUser = user.toObject();
+    delete safeUser.password;
 
-    res.status(200).json({ message: "User profile updated", user: userWithoutPassword });
+    if (safeUser.profileImage && !String(safeUser.profileImage).startsWith("http")) {
+      safeUser.profileImage = `${protocol}://${host}/uploads/${String(safeUser.profileImage).replace(/\\/g, "/")}`;
+    }
+
+    return res.status(200).json({ message: "User profile updated", user: safeUser });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
+    console.error("updateUserProfile error:", err);
+    return res.status(500).json({ message: "Error", error: err.message });
   }
 };
 

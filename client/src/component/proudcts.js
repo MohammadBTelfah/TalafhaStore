@@ -33,10 +33,12 @@ export default function ProductsPage({ darkMode }) {
   };
 
   // Helpers
-  const getImageUrl = (fileName) => {
-    if (!fileName) return "https://via.placeholder.com/800x600?text=No+Image";
-    return `${IMG_BASE}/${String(fileName).replace(/\\/g, "/")}`;
-  };
+const getImageUrl = (v) => {
+  if (!v) return "https://via.placeholder.com/800x600?text=No+Image";
+  return v.startsWith("http") 
+    ? v 
+    : `${IMG_BASE}/${String(v).replace(/\\/g, "/")}`;
+};
   const sameId = (a, b) => String(a || "").toLowerCase() === String(b || "").toLowerCase();
 
   // ✅ شارة الستوك

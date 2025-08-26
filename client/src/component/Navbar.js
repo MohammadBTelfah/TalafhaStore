@@ -7,13 +7,14 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/system";
 import {
-  FiMenu, FiShoppingCart, FiMoon, FiSun, FiHome, FiPackage,
-  FiInfo, FiPhone, FiMinus, FiPlus, FiTrash2
+  FiHome, FiInfo, FiPhone, FiPackage, FiShoppingCart,
+  FiSun, FiMoon, FiMenu, FiMinus, FiPlus, FiTrash2
 } from "react-icons/fi";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
+const IMG_BASE = `${API_BASE}/uploads`;
 
 const GRAD = "linear-gradient(135deg, #71b7e6, #9b59b6)";
 
@@ -51,6 +52,14 @@ const QuantityButton = styled(IconButton)({
   borderRadius: 6,
   padding: 4
 });
+
+// ✅ يبني رابط الصورة للحالتين: URL كامل أو filename قديم
+const getImageUrl = (v) => {
+  if (!v) return "https://via.placeholder.com/800x600?text=No+Image";
+  return String(v).startsWith("http")
+    ? v
+    : `${IMG_BASE}/${String(v).replace(/\\/g, "/")}`;
+};
 
 const cleanToken = (raw) => {
   if (!raw) return "";
@@ -315,13 +324,7 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
                 <IconButton onClick={openUserMenu} sx={{ p:0 }}>
                   <Avatar
                     alt={user?.fullName || "Guest"}
-                    src={
-                      user?.profileImage
-                        ? (String(user.profileImage).startsWith("http")
-                            ? user.profileImage
-                            : `${API_BASE}/uploads/${String(user.profileImage).replace(/\\/g,"/")}`)
-                        : undefined
-                    }
+                    src={user?.profileImage ? getImageUrl(user.profileImage) : undefined}
                     sx={{
                       width: 36, height: 36,
                       bgcolor: isDark ? "rgba(255,255,255,.2)" : "rgba(0,0,0,.08)",
@@ -426,7 +429,7 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
                         <MUIAvatar
                           variant="rounded"
                           alt={item.product.prodName}
-                          src={`${API_BASE}/uploads/${String(item.product.prodImage).replace(/\\/g,"/")}`}
+                          src={getImageUrl(item.product.prodImage)}
                           sx={{
                             width: 64,
                             height: 64,
