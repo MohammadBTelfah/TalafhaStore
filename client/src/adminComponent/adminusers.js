@@ -18,6 +18,14 @@ import {
 } from "@mui/material";
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:5002";
+const IMG_BASE  = `${API_BASE}/uploads`;
+
+// ✅ دالة موحّدة: تتعامل مع URL كامل أو filename قديم + تستبدل backslashes
+const getImageUrl = (v, fallback = "https://i.pravatar.cc/150?u=default") => {
+  if (!v) return fallback;
+  const s = String(v);
+  return s.startsWith("http") ? s : `${IMG_BASE}/${s.replace(/\\/g, "/")}`;
+};
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -28,7 +36,9 @@ export default function AdminUsers() {
     message: "",
     severity: "info",
   });
+
   const token = localStorage.getItem("token");
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
 
   const showNotif = (message, severity = "info") =>
     setNotification({ open: true, message, severity });
@@ -39,15 +49,12 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       const res = await axios.get(`${API_BASE}/api/users/get-all-user`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeader,
       });
       setUsers(res.data?.users || res.data || []);
     } catch (err) {
       console.error("Fetch users error:", err);
-      showNotif(
-        err.response?.data?.message || "Failed to fetch users",
-        "error"
-      );
+      showNotif(err.response?.data?.message || "Failed to fetch users", "error");
     }
   };
 
@@ -77,13 +84,10 @@ export default function AdminUsers() {
       const res = await axios.put(
         `${API_BASE}/api/users/update/${editedUser._id}`,
         editedUser,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: authHeader }
       );
 
       const updatedList = [...users];
-      // إذا الـ API رجّع user محدث:
       const updatedUser = res.data?.user || editedUser;
       updatedList[editIndex] = updatedUser;
       setUsers(updatedList);
@@ -104,7 +108,7 @@ export default function AdminUsers() {
 
     try {
       await axios.delete(`${API_BASE}/api/users/delete/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeader,
       });
       setUsers((prev) => prev.filter((u) => u._id !== id));
       showNotif("User deleted", "success");
@@ -115,13 +119,7 @@ export default function AdminUsers() {
   };
 
   // ============= Helpers =============
-  const userAvatar = (u) => {
-    if (!u?.profileImage) return "https://i.pravatar.cc/150?u=default";
-    // لو الصورة من Google (رابط كامل)
-    if (String(u.profileImage).startsWith("http")) return u.profileImage;
-    // صورة مرفوعة على السيرفر
-    return `${API_BASE}/uploads/${u.profileImage}`;
-  };
+  const userAvatar = (u) => getImageUrl(u?.profileImage);
 
   return (
     <Box sx={{ p: 3 }}>
